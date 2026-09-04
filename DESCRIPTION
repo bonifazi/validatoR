@@ -1,17 +1,22 @@
 Package: validatoR
-Title: What the Package Does (One Line, Title Case)
+Title: Validation of (Genomic) Prediction Models
 Version: 0.0.0.9000
-Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+Authors@R:
+    person("Renzo", "Bonifazi", , "renzo.bonifazi@wur.nl", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-1794-4708"))
+Description: Tools for validating (genomic) prediction models in animal
+    breeding. Includes native support for reading software output files (e.g. MiXBLUP) and utilities for defining validation
+    groups.
 License: MIT + file LICENSE
+URL: https://github.com/bonifazi/validatoR
+BugReports: https://github.com/bonifazi/validatoR/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
-Suggests: 
+Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-Imports: 
+Imports:
     assertthat,
     boot,
     data.table,
