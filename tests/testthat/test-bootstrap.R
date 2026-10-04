@@ -73,7 +73,7 @@ test_that(".run_bootstrap closes its snow cluster, also when the statistic error
     makeCluster = function(...) {
       cl <- make_cluster(...)
       made[[length(made) + 1L]] <<- cl
-      cl
+      return(cl)
     },
     .package = "parallel"
   )
