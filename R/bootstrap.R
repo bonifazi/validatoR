@@ -38,11 +38,15 @@
   stopifnot(
     is.data.frame(data),
     is.function(stat_fun),
-    is.numeric(n_boot), length(n_boot) == 1L, n_boot >= 2,
-    is.numeric(ncpus),  length(ncpus)  == 1L, ncpus  >= 1
+    is.numeric(n_boot),
+    length(n_boot) == 1L,
+    n_boot >= 2,
+    is.numeric(ncpus),
+    length(ncpus) == 1L,
+    ncpus >= 1
   )
   n_boot <- as.integer(n_boot)
-  ncpus  <- as.integer(ncpus)
+  ncpus <- as.integer(ncpus)
 
   # pick the parallel backend from the OS
   backend <- if (ncpus == 1L) {
@@ -50,17 +54,26 @@
   } else {
     switch(
       .Platform$OS.type,
-      windows = "snow",      # snow on Windows
-      unix    = "multicore", # multicore on Linux/macOS
-      stop("Cannot choose a parallel backend for OS type '", .Platform$OS.type,
-           "'. Use `ncpus = 1`.", call. = FALSE)
+      windows = "snow", # snow on Windows
+      unix = "multicore", # multicore on Linux/macOS
+      stop(
+        "Cannot choose a parallel backend for OS type '",
+        .Platform$OS.type,
+        "'. Use `ncpus = 1`.",
+        call. = FALSE
+      )
     )
   }
 
   # check that requested n. CPUs is not larger than the number of cores available
   # (skipped when serial; detectCores() can also return NA, hence isTRUE)
   if (ncpus > 1L && isTRUE(ncpus > parallel::detectCores())) {
-    stop("`ncpus` (", ncpus, ") is larger than the number of cores available.", call. = FALSE)
+    stop(
+      "`ncpus` (",
+      ncpus,
+      ") is larger than the number of cores available.",
+      call. = FALSE
+    )
   }
 
   # for snow, own the cluster so its shutdown is guaranteed and stop on exit
@@ -72,20 +85,21 @@
 
   # run the bootstrap
   b <- boot::boot(
-    data      = data,
+    data = data,
     statistic = stat_fun, # called as stat_fun(data, indices, ...) on each resample
-    R         = n_boot,
-    parallel  = backend,
-    ncpus     = ncpus,
-    cl        = cl,
+    R = n_boot,
+    parallel = backend,
+    ncpus = ncpus,
+    cl = cl,
     ...
   )
 
   # b$t0: statistics on the original data (named vector)
   # b$t : n_boot x n_statistics matrix of replicates
-  data.frame(
-    value     = b$t0,
-    SE        = apply(b$t, 2, stats::sd),
+  result <- data.frame(
+    value = b$t0,
+    SE = apply(b$t, 2, stats::sd),
     row.names = names(b$t0)
   )
+  return(result)
 }
