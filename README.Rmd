@@ -17,10 +17,14 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 [![GitHub Release](https://img.shields.io/github/v/release/bonifazi/validatoR?include_prereleases)](https://github.com/bonifazi/validatoR/releases) [![Licence: MIT](https://img.shields.io/badge/Licence-MIT-green)](https://github.com/bonifazi/validatoR/blob/main/LICENSE.md) [![R-CMD-check](https://github.com/bonifazi/validatoR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/bonifazi/validatoR/actions/workflows/R-CMD-check.yaml) [![Codecov test coverage](https://codecov.io/gh/bonifazi/validatoR/graph/badge.svg)](https://app.codecov.io/gh/bonifazi/validatoR)
-[![Codecov test coverage](https://codecov.io/gh/bonifazi/validatoR/graph/badge.svg)](https://app.codecov.io/gh/bonifazi/validatoR)
 <!-- badges: end -->
 
-The goal of validatoR is to ...
+validatoR validates (genomic) prediction models in animal breeding. You give it
+predictions, such as (genomic) EBVs, and the thing they're meant to predict,
+such as pre-corrected phenotypes, true breeding values or EBVs from a later
+evaluation. It returns the statistics you need to judge them: correlation,
+slope, intercept, mean difference and, if you supply the heritability, accuracy.
+Standard errors come from a bootstrap via the boot package.
 
 ## Installation
 
@@ -33,25 +37,29 @@ pak::pak("bonifazi/validatoR")
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+`toy_validation` ships with the package. It holds 2000 animals with EBVs from a
+partial and a whole evaluation, built so the true answers are known.
 
 ```{r example}
 library(validatoR)
-## basic example code
+
+res <- validate_prediction(
+  prediction = toy_validation$partial,
+  target     = toy_validation$whole,
+  h2         = 0.8
+)
+res$stats
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
+Add `bootstrap = TRUE` to get standard errors, and `plot = TRUE` for a
+scatter plot of target against prediction.
 
-```{r cars}
-summary(cars)
+```{r example-boot}
+set.seed(1)
+res_boot <- validate_prediction(
+  toy_validation$partial, toy_validation$whole,
+  bootstrap = TRUE, n_boot = 200, plot = TRUE
+)
+res_boot$stats
+res_boot$plot
 ```
-
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
-
-You can also embed plots, for example:
-
-```{r pressure, echo = FALSE}
-plot(pressure)
-```
-
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.
