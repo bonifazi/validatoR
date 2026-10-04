@@ -11,6 +11,12 @@
 #   whole = intercept + slope * partial + noise
 # the dataset has known target statistics (dispersion bias equals `slope` in expectation,
 # level bias = intercept, and correlation is also known), which can be used in tests.
+#
+# `pheno` is a pre-corrected phenotype built on top of `whole` (see the section
+# "Pre-corrected phenotype" below) so that, with `h2` known, the accuracy
+# estimated by validate_prediction(partial, pheno, h2 = h2) has a known value.
+# Its random draws come AFTER all the others, so adding it did not change the
+# values of the other columns.
 # ---------------------------------------------------------------------------
 
 set.seed(123)
@@ -25,6 +31,7 @@ target_rho        <- 0.85   # cor(partial, whole) = ratio of accuracies
 sd_partial <- 10            # SD of partial EBVs
 VAR_A      <- 300           # true additive genetic variance (GSD ~ 17.3)
 mean_inb   <- 0.05          # average inbreeding
+h2         <- 0.30          # heritability of the pre-corrected phenotype `pheno`
 
 ## ---- Derive simulation parameters from targets stats -------------------
 # With:
@@ -47,10 +54,61 @@ group <- factor(sample(paste0("cohort_", 1:4), n, replace = TRUE))
 # inbreeding coefficients (used for accuracy_partial and its bootstrap SE)
 F_coef <- pmax(0, rnorm(n, mean = mean_inb, sd = 0.01))
 
+## ---- Pre-corrected phenotype ---------------------------------------------
+# Build a true breeding value (tbv) around `whole`, and a phenotype around tbv:
+#   tbv   = whole + u,   u is independent of `whole` and `partial`
+#           -> cov(whole, tbv) = var(whole), i.e. `whole` is an unbiased EBV of tbv
+#           -> var(tbv) = VAR_A, so var(u) = VAR_A - var(whole)
+#   pheno = tbv + e,     e independent error added, var(e) = VAR_A * (1 - h2) / h2
+#           -> var(tbv) / var(pheno) = VAR_A / var(pheno) = h2
+# Consequences (in expectation), step by step:
+#
+# 1) cov(partial, pheno) = cov(partial, whole) = dispersion * var(partial)
+#    
+#    pheno = whole + u + e                       (because tbv = whole + u)
+#    cov(partial, pheno) = cov(partial, whole) + cov(partial, u) + cov(partial, e)
+#                          (the covariance of a sum is the sum of the covariances)
+#    u and e are independent of partial, so cov(partial, u) = cov(partial, e) = 0
+#    -> cov(partial, pheno) = cov(partial, whole)
+#    whole = a + b * partial + noise, with b = dispersion. The constant a and the
+#    independent noise do not covary with partial, so
+#    cov(partial, whole) = b * cov(partial, partial) = b * var(partial)
+#    -> 0.90 * 10^2 = 90
+#
+# 2) cor(partial, pheno) = dispersion * sd_partial / sqrt(VAR_A / h2)
+#    
+#    var(pheno) = var(tbv) + var(e) = VAR_A + VAR_A * (1 - h2) / h2 = VAR_A / h2
+#    (tbv and e are independent, so the variances add)
+#    -> sd(pheno) = sqrt(VAR_A / h2) = sqrt(300 / 0.3) = 31.6
+#    cor(partial, pheno) = cov(partial, pheno) / (sd(partial) * sd(pheno))
+#                        = dispersion * var(partial) / (sd_partial * sqrt(VAR_A / h2))
+#                        = dispersion * sd_partial / sqrt(VAR_A / h2)
+#    -> 90 / (10 * 31.6) = 0.285
+#
+# 3) cor(partial, pheno) / sqrt(h2) = dispersion * sd_partial / sqrt(VAR_A)
+#    
+#    sqrt(VAR_A / h2) = sqrt(VAR_A) / sqrt(h2), so
+#    cor(partial, pheno) = dispersion * sd_partial * sqrt(h2) / sqrt(VAR_A)
+#    ->
+#    cor(partial, pheno) / sqrt(h2) = dispersion * sd_partial / sqrt(VAR_A)
+#    -> 0.285 / 0.548 = 0.52   (= 9 / 17.3)
+#    This is cor(partial, tbv): cov(partial, tbv) = cov(partial, whole + u) = 90
+#    by the same argument as in 1), and sd(tbv) = sqrt(VAR_A) = 17.3, so
+#    cor(partial, tbv) = 90 / (10 * 17.3) = 0.52.
+#    It is the accuracy that validate_prediction() should recover when it is
+#    given h2.
+var_whole  <- b^2 * sd_partial^2 + sd_e^2   # expected variance of `whole`
+stopifnot(VAR_A > var_whole)                # otherwise var(u) would be negative
+sd_u       <- sqrt(VAR_A - var_whole)
+sd_e_pheno <- sqrt(VAR_A * (1 - h2) / h2)
+tbv        <- whole + rnorm(n, mean = 0, sd = sd_u)        # not stored
+pheno      <- tbv + rnorm(n, mean = 0, sd = sd_e_pheno)
+
 toy_validation <- data.frame(
   id      = seq_len(n),
   partial = partial,
   whole   = whole,
+  pheno   = pheno,
   group   = group,
   inbreeding = F_coef
 )
@@ -67,5 +125,14 @@ realised <- c(
 print(round(realised, 4))
 # Targets: level_bias 0.75, dispersion 0.90, rho 0.85 (sampling noise aside).
 # VAR_A above is the value to pass to the VAR_A argument in examples/tests.
+
+realised_pheno <- c(
+  cor_partial_pheno = cor(toy_validation$partial, toy_validation$pheno),
+  cor_partial_pheno_scaled = cor(toy_validation$partial, toy_validation$pheno) / sqrt(h2)
+)
+print(round(realised_pheno, 4))
+# Targets: cor_partial_pheno = b * sd_partial / sqrt(VAR_A / h2) = 0.285,
+#          accuracy_via_h2   = b * sd_partial / sqrt(VAR_A)      = 0.520
+# (sampling SE of about 0.02 and 0.04). Pass h2 = 0.3 to validate_prediction().
 
 usethis::use_data(toy_validation, overwrite = TRUE)
