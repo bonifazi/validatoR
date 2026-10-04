@@ -4,12 +4,20 @@
 \name{validatoR-package}
 \alias{validatoR}
 \alias{validatoR-package}
-\title{validatoR: What the Package Does (One Line, Title Case)}
+\title{validatoR: Validation of (Genomic) Prediction Models}
 \description{
-What the package does (one paragraph).
+Tools for validating (genomic) prediction models in animal breeding. Includes native support for reading software output files (e.g. MiXBLUP) and utilities for defining validation groups.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/bonifazi/validatoR}
+  \item Report bugs at \url{https://github.com/bonifazi/validatoR/issues}
+}
+
 }
 \author{
-\strong{Maintainer}: First Last \email{first.last@example.com}
+\strong{Maintainer}: Renzo Bonifazi \email{renzo.bonifazi@wur.nl} (\href{https://orcid.org/0000-0002-1794-4708}{ORCID})
 
 }
 \keyword{internal}
