@@ -47,8 +47,8 @@ object or \code{NULL}.
 Compares predictions, for example (genomic) EBVs, with the
 values they are meant to predict (the \code{target}), such as pre-corrected
 phenotypes, raw phenotypes, true breeding values, or (genomic) EBVs from a more complete/other evaluation,
-for a set of validation individuals. Returns the correlation, the regression of
-statistics of the target on the prediction (slope and intercept) and the mean difference.
+for a set of validation individuals. Returns the correlation, the regression statistics
+of the target on the prediction (slope and intercept) and the mean difference.
 When \code{h2} is supplied, the correlation is also divided by \code{sqrt(h2)} to
 give an accuracy, which is needed when validating for pre-corrected phenotypes.
 Optionally, standard errors are estimated by bootstrapping over individuals with replacement.
@@ -59,6 +59,7 @@ The statistics regress \code{target} on \code{prediction}, so a
 slope of 1 means no dispersion bias. With \code{x} the predictions and \code{y} the
 target:
 \itemize{
+\item \code{n}: number of pairs used (it has no standard error)
 \item \code{correlation}: \code{cor(x, y)}
 \item \code{slope}: \code{cov(x, y) / var(x)}, the regression of \code{y} on \code{x}
 \item \code{intercept}: \code{mean(y) - slope * mean(x)}
@@ -68,15 +69,26 @@ target:
 
 Missing values (\code{NA}) are not allowed in either vector, because dropping
 them could silently change which animals are compared; the function stops
-with an error. Remove the affected animals from both vectors first.
+with an error. Remove the affected animals from both vectors first. A
+\code{prediction} or \code{target} with no variation (all values equal), or fewer than
+3 pairs, also gives an error, because the correlation and the slope are not
+defined.
 }
 \examples{
-# `whole` stands in for the target here. `h2 = 0.8` is only chosen so that
-# the accuracy of this toy data stays below 1
-res <- validate_prediction(toy_validation$partial, toy_validation$whole, h2 = 0.8)
+# `pheno` is a pre-corrected phenotype simulated with h2 = 0.3, so passing
+# `h2` gives the accuracy of the partial EBVs (about 0.5 for this toy data)
+res <- validate_prediction(toy_validation$partial, toy_validation$pheno, h2 = 0.3)
 res$stats
-
-res_boot <- validate_prediction(toy_validation$partial, toy_validation$whole,
-                             bootstrap = TRUE, n_boot = 200)
+# get SE via bootstrapping
+res_boot <- validate_prediction(toy_validation$partial, toy_validation$pheno,
+                                bootstrap = TRUE, n_boot = 200, h2 = 0.3)
 res_boot$stats
+# without `h2` (e.g. when comparing against another EBV such as `whole`) no
+# accuracy is returned
+validate_prediction(toy_validation$partial, toy_validation$whole)$stats
+# scatter plot of the target on the prediction (grey line: slope 1,
+# blue line: fitted regression)
+res_plot <- validate_prediction(toy_validation$partial, toy_validation$pheno,
+                                h2 = 0.3, plot = TRUE)
+res_plot$plot
 }
