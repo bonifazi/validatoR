@@ -1,0 +1,7 @@
+linters: linters_with_defaults(
+    defaults = list(),
+    T_and_F_symbol_linter(),
+    redundant_equals_linter(),
+    return_linter(return_style = "explicit")
+  )
+encoding: "UTF-8"
