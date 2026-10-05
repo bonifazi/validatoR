@@ -15,12 +15,12 @@ coverage](https://codecov.io/gh/bonifazi/validatoR/graph/badge.svg)](https://app
 <!-- badges: end -->
 
 validatoR validates (genomic) prediction models in animal breeding. You
-give it predictions, such as (genomic) EBVs, and the thing they’re meant
-to predict, such as pre-corrected phenotypes, true breeding values or
-EBVs from a later evaluation. It returns the statistics you need to
-judge them: correlation, slope, intercept, mean difference and, if you
-supply the heritability, accuracy. Standard errors come from a bootstrap
-via the boot package.
+give it predictions, such as (genomic) EBVs, and what they are meant to
+predict, such as pre-corrected phenotypes, EBVs from a later or more
+complete evaluation, true breeding values. It returns validation
+statistics such as correlation, slope, intercept, mean difference and,
+if you supply the heritability, scales for accuracy. Standard errors
+come from a bootstrap via the boot package. Plots are also produced.
 
 ## Installation
 
@@ -47,12 +47,13 @@ res <- validate_prediction(
   h2         = 0.8
 )
 res$stats
-#>                  value
-#> correlation  0.8517943
-#> slope        0.8928575
-#> intercept   -0.8295452
-#> mean_diff    0.8609343
-#> accuracy     0.9523350
+#>                    value
+#> n           2000.0000000
+#> correlation    0.8517943
+#> slope          0.8928575
+#> intercept     -0.8295452
+#> mean_diff      0.8609343
+#> accuracy       0.9523350
 ```
 
 Add `bootstrap = TRUE` to get standard errors, and `plot = TRUE` for a
@@ -65,11 +66,12 @@ res_boot <- validate_prediction(
   bootstrap = TRUE, n_boot = 200, plot = TRUE
 )
 res_boot$stats
-#>                  value          SE
-#> correlation  0.8517943 0.006197353
-#> slope        0.8928575 0.013108802
-#> intercept   -0.8295452 0.125468557
-#> mean_diff    0.8609343 0.128372423
+#>                    value          SE
+#> n           2000.0000000          NA
+#> correlation    0.8517943 0.006197353
+#> slope          0.8928575 0.013108802
+#> intercept     -0.8295452 0.125468557
+#> mean_diff      0.8609343 0.128372423
 res_boot$plot
 ```
 

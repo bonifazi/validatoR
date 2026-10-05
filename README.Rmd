@@ -20,11 +20,9 @@ knitr::opts_chunk$set(
 <!-- badges: end -->
 
 validatoR validates (genomic) prediction models in animal breeding. You give it
-predictions, such as (genomic) EBVs, and the thing they're meant to predict,
-such as pre-corrected phenotypes, true breeding values or EBVs from a later
-evaluation. It returns the statistics you need to judge them: correlation,
-slope, intercept, mean difference and, if you supply the heritability, accuracy.
-Standard errors come from a bootstrap via the boot package.
+predictions, such as (genomic) EBVs, and what they are meant to predict,
+such as pre-corrected phenotypes, EBVs from a later or more complete evaluation, true breeding values. It returns validation statistics such as correlation,
+slope, intercept, mean difference and, if you supply the heritability, scales for accuracy. Standard errors come from a bootstrap via the boot package. Plots are also produced.
 
 ## Installation
 
