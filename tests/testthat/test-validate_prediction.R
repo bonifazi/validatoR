@@ -198,6 +198,7 @@ test_that("bootstrap is reproducible with a seed", {
 
 # ----------------------------------------------------------------------------
 # Block 4. Plot
+# Tests: plot = TRUE returns a ggplot that can be built.
 # ----------------------------------------------------------------------------
 
 test_that("plot = TRUE returns a ggplot that can be built", {

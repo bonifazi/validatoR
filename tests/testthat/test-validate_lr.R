@@ -273,7 +273,8 @@ test_that("bootstrap SEs are positive, with NA for n and 0 for var_a", {
 
 # ----------------------------------------------------------------------------
 # Block 6. Plots
-# Group labels, plot_in_gsd, the regression line, and no ggplot2 deprecations.
+# Tests: Group labels, plot_in_gsd, the regression line, and no ggplot2
+# deprecations.
 # ----------------------------------------------------------------------------
 
 test_that("group labels follow the animals, whatever the order of val_group", {
@@ -385,7 +386,7 @@ test_that("the plots build without ggplot2 deprecations", {
 
 # ----------------------------------------------------------------------------
 # Block 7. Input classes
-# A data.table gives the same result as a data frame.
+# Tests: A data.table gives the same result as a data frame.
 # ----------------------------------------------------------------------------
 
 test_that("data.table inputs give the same result as data frames", {
