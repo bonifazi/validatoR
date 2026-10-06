@@ -1,9 +1,14 @@
-# Tests for validate_prediction(). Two kinds of checks:
+# Tests for validate_prediction(). The tests are grouped in blocks, each with a
+# short description. Two kinds of checks:
 # - exact: values that must equal a direct formula or a hand-calculated result
 # - against the known targets of `toy_validation` (see data-raw/toy_validation.R),
 #   with tolerances that reflect the sampling error of the 2000 toy animals
 
-# ---- Exact values -----------------------------------------------------------
+# ----------------------------------------------------------------------------
+# Block 1. The statistics are right
+# Tests: Hand-calculated values, the direct formulas and lm(), the rows of the table,
+# and the mean squared error with its identities.
+# ----------------------------------------------------------------------------
 
 test_that("a perfect straight line gives the hand-calculated statistics", {
   x <- 1:10
@@ -15,6 +20,9 @@ test_that("a perfect straight line gives the hand-calculated statistics", {
   expect_equal(res["intercept", "value"], 3)
   # mean(x) = 5.5, mean(y) = 14
   expect_equal(res["mean_diff", "value"], 5.5 - 14)
+  # x - y = -(x + 3), so mse = mean((4:13)^2) = 805 / 10
+  expect_equal(res["mse", "value"], 80.5)
+  expect_equal(res["rmse", "value"], sqrt(80.5))
 })
 
 test_that("identical prediction and target give slope 1 and no bias", {
@@ -25,6 +33,8 @@ test_that("identical prediction and target give slope 1 and no bias", {
   expect_equal(res["slope", "value"], 1)
   expect_equal(res["intercept", "value"], 0)
   expect_equal(res["mean_diff", "value"], 0)
+  expect_equal(res["mse", "value"], 0)
+  expect_equal(res["rmse", "value"], 0)
 })
 
 test_that("statistics match the direct formulas and lm()", {
@@ -40,6 +50,32 @@ test_that("statistics match the direct formulas and lm()", {
   expect_equal(res["accuracy", "value"], cor(x, y) / sqrt(0.3))
 })
 
+test_that("mse and rmse match the direct formulas and their identities", {
+  x <- toy_validation$partial
+  y <- toy_validation$whole
+  res <- validate_prediction(x, y)$stats
+  d <- x - y
+
+  expect_equal(res["mse", "value"], mean(d^2))
+  expect_equal(res["rmse", "value"], sqrt(mean(d^2)))
+  expect_equal(res["rmse", "value"]^2, res["mse", "value"])
+  # mse = squared level bias + variance of the differences (n as the divisor)
+  expect_equal(
+    res["mse", "value"],
+    res["mean_diff", "value"]^2 + mean((d - mean(d))^2)
+  )
+})
+
+test_that("rmse_in_GSD is only returned when var_a is given", {
+  x <- toy_validation$partial
+  y <- toy_validation$whole
+
+  expect_false("rmse_in_GSD" %in% rownames(validate_prediction(x, y)$stats))
+
+  res <- validate_prediction(x, y, var_a = 300)$stats
+  expect_equal(res["rmse_in_GSD", "value"], res["rmse", "value"] / sqrt(300))
+})
+
 test_that("accuracy is only returned when h2 is given", {
   x <- toy_validation$partial
   y <- toy_validation$pheno
@@ -52,13 +88,29 @@ test_that("the result has the documented structure", {
   res <- validate_prediction(toy_validation$partial, toy_validation$whole)
 
   expect_named(res, c("stats", "plot"))
+  expect_s3_class(res$stats, "validatoR_stats")
   expect_s3_class(res$stats, "data.frame")
   expect_named(res$stats, "value")
   expect_identical(
     rownames(res$stats),
-    c("n", "correlation", "slope", "intercept", "mean_diff")
+    c("n", "correlation", "slope", "intercept", "mean_diff", "mse", "rmse")
   )
   expect_null(res$plot)
+
+  # the optional rows come after the fixed ones, accuracy last
+  res_all <- validate_prediction(
+    toy_validation$partial,
+    toy_validation$pheno,
+    h2 = 0.3,
+    var_a = 300
+  )
+  expect_identical(
+    rownames(res_all$stats),
+    c(
+      "n", "correlation", "slope", "intercept", "mean_diff", "mse", "rmse",
+      "rmse_in_GSD", "accuracy"
+    )
+  )
 })
 
 test_that("n is the number of pairs used", {
@@ -69,7 +121,10 @@ test_that("n is the number of pairs used", {
   expect_equal(small["n", "value"], 7)
 })
 
-# ---- Known targets of the toy data ------------------------------------------
+# ----------------------------------------------------------------------------
+# Block 2. Known targets of the toy data
+# Tests: The values the dataset was simulated to have, within sampling noise.
+# ----------------------------------------------------------------------------
 
 test_that("partial vs whole recovers the simulated LR targets", {
   res <- validate_prediction(toy_validation$partial, toy_validation$whole)$stats
@@ -93,7 +148,10 @@ test_that("partial vs pheno recovers the known accuracy when h2 is given", {
   expect_lt(abs(res["accuracy", "value"] - 0.52), 0.1)
 })
 
-# ---- Bootstrap --------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# Block 3. Bootstrap
+# Tests: Standard errors of every row except n, and reproducibility with a seed.
+# ----------------------------------------------------------------------------
 
 test_that("bootstrap adds positive, finite SEs and keeps the estimates", {
   set.seed(1)
@@ -101,15 +159,18 @@ test_that("bootstrap adds positive, finite SEs and keeps the estimates", {
     toy_validation$partial,
     toy_validation$pheno,
     h2 = 0.3,
+    var_a = 300,
     bootstrap = TRUE,
     n_boot = 50
   )$stats
   no_boot <- validate_prediction(
     toy_validation$partial,
     toy_validation$pheno,
-    h2 = 0.3
+    h2 = 0.3,
+    var_a = 300
   )$stats
 
+  expect_s3_class(res, "validatoR_stats")
   expect_named(res, c("value", "SE"))
   expect_equal(res$value, no_boot$value)
 
@@ -135,7 +196,9 @@ test_that("bootstrap is reproducible with a seed", {
   expect_equal(run(), run())
 })
 
-# ---- Plot -------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# Block 4. Plot
+# ----------------------------------------------------------------------------
 
 test_that("plot = TRUE returns a ggplot that can be built", {
   res <- validate_prediction(
@@ -148,7 +211,11 @@ test_that("plot = TRUE returns a ggplot that can be built", {
   expect_no_error(ggplot2::ggplot_build(res$plot))
 })
 
-# ---- Input checks -----------------------------------------------------------
+# ----------------------------------------------------------------------------
+# Block 5. Invalid input gives clear errors
+# Tests: The vectors (type, length, missing values, variation, number of pairs) and
+# the arguments (h2, var_a, flags, n_boot, ncpus).
+# ----------------------------------------------------------------------------
 
 test_that("non-numeric input is rejected", {
   expect_error(validate_prediction(letters[1:5], 1:5), "numeric")
@@ -158,17 +225,6 @@ test_that("non-numeric input is rejected", {
 
 test_that("vectors of different length are rejected", {
   expect_error(validate_prediction(1:5, 1:4), "same length")
-})
-
-test_that("h2 must be a single number in (0, 1]", {
-  x <- toy_validation$partial
-  y <- toy_validation$pheno
-
-  expect_error(validate_prediction(x, y, h2 = 0), "h2")
-  expect_error(validate_prediction(x, y, h2 = 1.5), "h2")
-  expect_error(validate_prediction(x, y, h2 = c(0.2, 0.3)), "h2")
-  expect_error(validate_prediction(x, y, h2 = "0.3"), "h2")
-  expect_no_error(validate_prediction(x, y, h2 = 1))
 })
 
 test_that("missing values give an error that reports the counts", {
@@ -193,6 +249,30 @@ test_that("a prediction or target with no variation is rejected", {
   expect_error(validate_prediction(1:5, rep(2, 5)), "`target` has no variation")
 })
 
+test_that("h2 must be a single number in (0, 1]", {
+  x <- toy_validation$partial
+  y <- toy_validation$pheno
+
+  expect_error(validate_prediction(x, y, h2 = 0), "h2")
+  expect_error(validate_prediction(x, y, h2 = 1.5), "h2")
+  expect_error(validate_prediction(x, y, h2 = c(0.2, 0.3)), "h2")
+  expect_error(validate_prediction(x, y, h2 = "0.3"), "h2")
+  expect_no_error(validate_prediction(x, y, h2 = 1))
+})
+
+test_that("var_a must be a single positive number", {
+  x <- toy_validation$partial
+  y <- toy_validation$whole
+  msg <- "`var_a` must be a single positive number."
+
+  expect_error(validate_prediction(x, y, var_a = 0), msg, fixed = TRUE)
+  expect_error(validate_prediction(x, y, var_a = -1), msg, fixed = TRUE)
+  expect_error(validate_prediction(x, y, var_a = c(1, 2)), msg, fixed = TRUE)
+  expect_error(validate_prediction(x, y, var_a = "300"), msg, fixed = TRUE)
+  expect_error(validate_prediction(x, y, var_a = NA_real_), msg, fixed = TRUE)
+  expect_no_error(validate_prediction(x, y, var_a = 300))
+})
+
 test_that("bootstrap and plot must be a single TRUE or FALSE", {
   x <- toy_validation$partial
   y <- toy_validation$whole
@@ -201,4 +281,30 @@ test_that("bootstrap and plot must be a single TRUE or FALSE", {
   expect_error(validate_prediction(x, y, bootstrap = 1), "bootstrap")
   expect_error(validate_prediction(x, y, bootstrap = c(TRUE, FALSE)), "bootstrap")
   expect_error(validate_prediction(x, y, plot = "yes"), "plot")
+})
+
+test_that("n_boot must be a single whole number of at least 2", {
+  x <- toy_validation$partial
+  y <- toy_validation$whole
+  msg <- "`n_boot` must be a single whole number of at least 2."
+
+  # checked even when bootstrap = FALSE, so a wrong value is found early
+  expect_error(validate_prediction(x, y, n_boot = 1), msg, fixed = TRUE)
+  expect_error(validate_prediction(x, y, n_boot = 2.5), msg, fixed = TRUE)
+  expect_error(validate_prediction(x, y, n_boot = c(10, 20)), msg, fixed = TRUE)
+  expect_error(validate_prediction(x, y, n_boot = NA), msg, fixed = TRUE)
+  expect_error(validate_prediction(x, y, n_boot = "10"), msg, fixed = TRUE)
+  expect_no_error(validate_prediction(x, y, n_boot = 2))
+})
+
+test_that("ncpus must be a single whole number of at least 1", {
+  x <- toy_validation$partial
+  y <- toy_validation$whole
+  msg <- "`ncpus` must be a single whole number of at least 1."
+
+  expect_error(validate_prediction(x, y, ncpus = 0), msg, fixed = TRUE)
+  expect_error(validate_prediction(x, y, ncpus = 1.5), msg, fixed = TRUE)
+  expect_error(validate_prediction(x, y, ncpus = c(1, 2)), msg, fixed = TRUE)
+  expect_error(validate_prediction(x, y, ncpus = NA), msg, fixed = TRUE)
+  expect_no_error(validate_prediction(x, y, ncpus = 1))
 })
