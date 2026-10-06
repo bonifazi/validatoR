@@ -56,6 +56,21 @@
   return(invisible(x))
 }
 
+#' Stop unless `x` is a single positive number
+#'
+#' For an optional argument, call it only when the argument is not `NULL`.
+#'
+#' @param x Value to check.
+#' @param arg Name of the argument, used in the error message.
+#' @return `x`, invisibly.
+#' @noRd
+.check_positive_number <- function(x, arg) {
+  if (!(is.numeric(x) && length(x) == 1L && is.finite(x) && x > 0)) {
+    stop("`", arg, "` must be a single positive number.", call. = FALSE)
+  }
+  return(invisible(x))
+}
+
 #' First few elements of a vector, pasted, for error messages
 #'
 #' @param x Vector.
