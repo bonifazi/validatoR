@@ -45,6 +45,7 @@
     length(ncpus) == 1L,
     ncpus >= 1
   )
+  # boot() expects whole numbers as integers
   n_boot <- as.integer(n_boot)
   ncpus <- as.integer(ncpus)
 
