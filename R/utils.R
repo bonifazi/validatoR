@@ -24,7 +24,10 @@
 #' @noRd
 .check_n_boot <- function(x) {
   if (
-    !(is.numeric(x) && length(x) == 1L && is.finite(x) && x >= 2 &&
+    !(is.numeric(x) &&
+      length(x) == 1L &&
+      is.finite(x) &&
+      x >= 2 &&
       x == round(x))
   ) {
     stop("`n_boot` must be a single whole number of at least 2.", call. = FALSE)
@@ -41,7 +44,10 @@
 #' @noRd
 .check_ncpus <- function(x) {
   if (
-    !(is.numeric(x) && length(x) == 1L && is.finite(x) && x >= 1 &&
+    !(is.numeric(x) &&
+      length(x) == 1L &&
+      is.finite(x) &&
+      x >= 1 &&
       x == round(x))
   ) {
     stop("`ncpus` must be a single whole number of at least 1.", call. = FALSE)

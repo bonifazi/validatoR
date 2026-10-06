@@ -145,217 +145,255 @@
 #' validate_lr(p, w, var_a = 300, inbreeding = inb,
 #'             bootstrap = TRUE, n_boot = 50)$stats
 validate_lr <- function(
-  partial,
-  whole,
-  val_group = NULL,
-  var_a = NULL,
-  average_F = NULL,
-  inbreeding = NULL,
-  plot = FALSE,
-  plot_verbose = FALSE,
-  plot_subgroups = FALSE,
-  plot_in_gsd = FALSE,
-  bootstrap = FALSE,
-  n_boot = 10000L,
-  ncpus = 1L,
-  verbose = FALSE
+    partial,
+    whole,
+    val_group = NULL,
+    var_a = NULL,
+    average_F = NULL,
+    inbreeding = NULL,
+    plot = FALSE,
+    plot_verbose = FALSE,
+    plot_subgroups = FALSE,
+    plot_in_gsd = FALSE,
+    bootstrap = FALSE,
+    n_boot = 10000L,
+    ncpus = 1L,
+    verbose = FALSE
 ) {
-  # 1. flags and scalar arguments
-  .check_flag(plot, "plot")
-  .check_flag(plot_verbose, "plot_verbose")
-  .check_flag(plot_subgroups, "plot_subgroups")
-  .check_flag(plot_in_gsd, "plot_in_gsd")
-  .check_flag(bootstrap, "bootstrap")
-  .check_flag(verbose, "verbose")
-  .check_n_boot(n_boot)
-  .check_ncpus(ncpus)
+    # 1. flags and scalar arguments
+    .check_flag(plot, "plot")
+    .check_flag(plot_verbose, "plot_verbose")
+    .check_flag(plot_subgroups, "plot_subgroups")
+    .check_flag(plot_in_gsd, "plot_in_gsd")
+    .check_flag(bootstrap, "bootstrap")
+    .check_flag(verbose, "verbose")
+    .check_n_boot(n_boot)
+    .check_ncpus(ncpus)
 
-  if (
-    !is.null(var_a) &&
-      !(is.numeric(var_a) && length(var_a) == 1L &&
-          is.finite(var_a) && var_a > 0)
-  ) {
-    stop("`var_a` must be a single positive number.", call. = FALSE)
-  }
-  if (isTRUE(plot_in_gsd) && is.null(var_a)) {
-    stop(
-      "`plot_in_gsd = TRUE` needs `var_a`, the additive genetic variance.",
-      call. = FALSE
-    )
-  }
-  if (
-    !is.null(average_F) &&
-      !(is.numeric(average_F) && length(average_F) == 1L &&
-          !is.na(average_F) && average_F >= 0 && average_F < 1)
-  ) {
-    stop("`average_F` must be a single number in [0, 1).", call. = FALSE)
-  }
-  if (!is.null(average_F) && !is.null(inbreeding)) {
-    stop("Provide either `average_F` or `inbreeding`, not both.", call. = FALSE)
-  }
-  if (isTRUE(bootstrap) && !is.null(average_F)) {
-    stop(
-      "With `bootstrap = TRUE`, provide `inbreeding` (one value per animal) ",
-      "instead of `average_F`, so that the average inbreeding is ",
-      "recomputed in every resample.",
-      call. = FALSE
-    )
-  }
-
-  # 2. EBVs as (id, value) data frames, merged by ID
-  p_df <- .lr_input(partial, "partial")
-  w_df <- .lr_input(whole, "whole")
-  data <- merge(p_df, w_df, by = "id")
-  if (nrow(data) == 0L) {
-    stop(
-      "`partial` and `whole` have no animal IDs in common. Check that the ",
-      "IDs are in column 1 of both and are the same kind of ID. IDs found, ",
-      "partial: ", .show_some(p_df$id), "; whole: ", .show_some(w_df$id), ".",
-      call. = FALSE
-    )
-  }
-
-  # 3. validation animals
-  val_ids <- NULL
-  if (is.null(val_group)) {
-    n_left_out <- nrow(p_df) + nrow(w_df) - 2L * nrow(data)
-    if (n_left_out > 0L) {
-      message(
-        n_left_out, " animal(s) found in only one of `partial` and ",
-        "`whole` were left out."
-      )
-    }
-  } else {
-    if (!is.data.frame(val_group)) {
-      stop(
-        "`val_group` must be a data frame with the validation IDs in ",
-        "column 1.",
-        call. = FALSE
-      )
-    }
-    val_group <- as.data.frame(val_group)
-    val_ids <- .as_id(val_group[[1]])
-    if (anyNA(val_ids) || anyDuplicated(val_ids) > 0L) {
-      stop("`val_group` IDs must be unique and not missing.", call. = FALSE)
-    }
-    not_found <- setdiff(val_ids, data$id)
-    if (length(not_found) > 0L) {
-      stop(
-        length(not_found), " ID(s) in `val_group` are not in both ",
-        "`partial` and `whole`, e.g. ", .show_some(not_found), ".",
-        call. = FALSE
-      )
-    }
-    data <- data[data$id %in% val_ids, , drop = FALSE]
-  }
-  if (
-    isTRUE(plot_subgroups) && (is.null(val_group) || ncol(val_group) < 2L)
-  ) {
-    stop(
-      "`plot_subgroups = TRUE` needs a group label in column 2 of ",
-      "`val_group`.",
-      call. = FALSE
-    )
-  }
-
-  # 4. inbreeding travels as a column, so resampling keeps it aligned
-  if (!is.null(inbreeding)) {
-    inb_df <- .lr_input(inbreeding, "inbreeding")
-    no_inb <- setdiff(data$id, inb_df$id)
-    if (length(no_inb) > 0L) {
-      stop(
-        length(no_inb), " validation animal(s) are missing from ",
-        "`inbreeding`, e.g. ", .show_some(no_inb), ".",
-        call. = FALSE
-      )
-    }
-    data <- merge(data, inb_df, by = "id")
     if (
-      anyNA(data$inbreeding) ||
-        any(data$inbreeding < 0 | data$inbreeding >= 1)
+        !is.null(var_a) &&
+            !(is.numeric(var_a) &&
+                length(var_a) == 1L &&
+                is.finite(var_a) &&
+                var_a > 0)
     ) {
-      stop(
-        "Inbreeding coefficients of the validation animals must be in ",
-        "[0, 1) and not missing.",
-        call. = FALSE
-      )
+        stop("`var_a` must be a single positive number.", call. = FALSE)
     }
-  }
-
-  # 5. checks on the validation animals
-  n_na_partial <- sum(is.na(data$partial))
-  n_na_whole <- sum(is.na(data$whole))
-  if (n_na_partial > 0L || n_na_whole > 0L) {
-    stop(
-      "Missing EBVs are not allowed for validation animals: `partial` has ",
-      n_na_partial, " and `whole` has ", n_na_whole, ".",
-      call. = FALSE
-    )
-  }
-  if (nrow(data) < 3L) {
-    stop("At least 3 validation animals are needed.", call. = FALSE)
-  }
-  if (length(unique(data$partial)) < 2L || length(unique(data$whole)) < 2L) {
-    stop(
-      "The `partial` and `whole` EBVs of the validation animals must vary ",
-      "(not all equal), otherwise dispersion and rho are not defined.",
-      call. = FALSE
-    )
-  }
-  if (isTRUE(verbose)) {
-    message("validate_lr(): ", nrow(data), " validation animals.")
-  }
-
-  # 6. statistics, with or without bootstrap SEs
-  if (isTRUE(bootstrap)) {
-    if (isTRUE(verbose)) {
-      message("Bootstrapping: ", n_boot, " resamples on ", ncpus, " CPU(s).")
+    if (isTRUE(plot_in_gsd) && is.null(var_a)) {
+        stop(
+            "`plot_in_gsd = TRUE` needs `var_a`, the additive genetic variance.",
+            call. = FALSE
+        )
     }
-    stats_df <- .run_bootstrap(
-      data,
-      .lr_stats,
-      n_boot = n_boot,
-      ncpus = ncpus,
-      var_a = var_a,
-      average_F = average_F
-    )
-    stats_df["n", "SE"] <- NA_real_ # a fixed count has no sampling error
-  } else {
-    stats_df <- data.frame(
-      value = .lr_stats(
-        data,
-        seq_len(nrow(data)),
-        var_a = var_a,
-        average_F = average_F
-      )
-    )
-  }
+    if (
+        !is.null(average_F) &&
+            !(is.numeric(average_F) &&
+                length(average_F) == 1L &&
+                !is.na(average_F) &&
+                average_F >= 0 &&
+                average_F < 1)
+    ) {
+        stop("`average_F` must be a single number in [0, 1).", call. = FALSE)
+    }
+    if (!is.null(average_F) && !is.null(inbreeding)) {
+        stop(
+            "Provide either `average_F` or `inbreeding`, not both.",
+            call. = FALSE
+        )
+    }
+    if (isTRUE(bootstrap) && !is.null(average_F)) {
+        stop(
+            "With `bootstrap = TRUE`, provide `inbreeding` (one value per animal) ",
+            "instead of `average_F`, so that the average inbreeding is ",
+            "recomputed in every resample.",
+            call. = FALSE
+        )
+    }
 
-  # 7. warn once, on the observed value, when the accuracy is not defined
-  if (
-    "accuracy_partial" %in% rownames(stats_df) &&
-      is.nan(stats_df["accuracy_partial", "value"])
-  ) {
-    warning(
-      "`accuracy_partial` is NaN because cov(partial, whole) is negative.",
-      call. = FALSE
-    )
-  }
+    # 2. EBVs as (id, value) data frames, merged by ID
+    p_df <- .lr_input(partial, "partial")
+    w_df <- .lr_input(whole, "whole")
+    data <- merge(p_df, w_df, by = "id")
+    if (nrow(data) == 0L) {
+        stop(
+            "`partial` and `whole` have no animal IDs in common. Check that the ",
+            "IDs are in column 1 of both and are the same kind of ID. IDs found, ",
+            "partial: ",
+            .show_some(p_df$id),
+            "; whole: ",
+            .show_some(w_df$id),
+            ".",
+            call. = FALSE
+        )
+    }
 
-  # 8. (optional) plot
-  p <- if (isTRUE(plot)) {
-    group <- if (isTRUE(plot_subgroups)) {
-      val_group[[2]][match(data$id, val_ids)]
+    # 3. validation animals
+    val_ids <- NULL
+    if (is.null(val_group)) {
+        n_left_out <- nrow(p_df) + nrow(w_df) - 2L * nrow(data)
+        if (n_left_out > 0L) {
+            message(
+                n_left_out,
+                " animal(s) found in only one of `partial` and ",
+                "`whole` were left out."
+            )
+        }
     } else {
-      NULL
+        if (!is.data.frame(val_group)) {
+            stop(
+                "`val_group` must be a data frame with the validation IDs in ",
+                "column 1.",
+                call. = FALSE
+            )
+        }
+        val_group <- as.data.frame(val_group)
+        val_ids <- .as_id(val_group[[1]])
+        if (anyNA(val_ids) || anyDuplicated(val_ids) > 0L) {
+            stop(
+                "`val_group` IDs must be unique and not missing.",
+                call. = FALSE
+            )
+        }
+        not_found <- setdiff(val_ids, data$id)
+        if (length(not_found) > 0L) {
+            stop(
+                length(not_found),
+                " ID(s) in `val_group` are not in both ",
+                "`partial` and `whole`, e.g. ",
+                .show_some(not_found),
+                ".",
+                call. = FALSE
+            )
+        }
+        data <- data[data$id %in% val_ids, , drop = FALSE]
     }
-    .plot_lr(data, stats_df, in_gsd = plot_in_gsd, var_a = var_a,
-             verbose = plot_verbose, group = group)
-  } else {
-    NULL
-  }
+    if (
+        isTRUE(plot_subgroups) && (is.null(val_group) || ncol(val_group) < 2L)
+    ) {
+        stop(
+            "`plot_subgroups = TRUE` needs a group label in column 2 of ",
+            "`val_group`.",
+            call. = FALSE
+        )
+    }
 
-  return(list(stats = .new_stats(stats_df), plot = p))
+    # 4. inbreeding travels as a column, so resampling keeps it aligned
+    if (!is.null(inbreeding)) {
+        inb_df <- .lr_input(inbreeding, "inbreeding")
+        no_inb <- setdiff(data$id, inb_df$id)
+        if (length(no_inb) > 0L) {
+            stop(
+                length(no_inb),
+                " validation animal(s) are missing from ",
+                "`inbreeding`, e.g. ",
+                .show_some(no_inb),
+                ".",
+                call. = FALSE
+            )
+        }
+        data <- merge(data, inb_df, by = "id")
+        if (
+            anyNA(data$inbreeding) ||
+                any(data$inbreeding < 0 | data$inbreeding >= 1)
+        ) {
+            stop(
+                "Inbreeding coefficients of the validation animals must be in ",
+                "[0, 1) and not missing.",
+                call. = FALSE
+            )
+        }
+    }
+
+    # 5. checks on the validation animals
+    n_na_partial <- sum(is.na(data$partial))
+    n_na_whole <- sum(is.na(data$whole))
+    if (n_na_partial > 0L || n_na_whole > 0L) {
+        stop(
+            "Missing EBVs are not allowed for validation animals: `partial` has ",
+            n_na_partial,
+            " and `whole` has ",
+            n_na_whole,
+            ".",
+            call. = FALSE
+        )
+    }
+    if (nrow(data) < 3L) {
+        stop("At least 3 validation animals are needed.", call. = FALSE)
+    }
+    if (length(unique(data$partial)) < 2L || length(unique(data$whole)) < 2L) {
+        stop(
+            "The `partial` and `whole` EBVs of the validation animals must vary ",
+            "(not all equal), otherwise dispersion and rho are not defined.",
+            call. = FALSE
+        )
+    }
+    if (isTRUE(verbose)) {
+        message("validate_lr(): ", nrow(data), " validation animals.")
+    }
+
+    # 6. statistics, with or without bootstrap SEs
+    if (isTRUE(bootstrap)) {
+        if (isTRUE(verbose)) {
+            message(
+                "Bootstrapping: ",
+                n_boot,
+                " resamples on ",
+                ncpus,
+                " CPU(s)."
+            )
+        }
+        stats_df <- .run_bootstrap(
+            data,
+            .lr_stats,
+            n_boot = n_boot,
+            ncpus = ncpus,
+            var_a = var_a,
+            average_F = average_F
+        )
+        stats_df["n", "SE"] <- NA_real_ # a fixed count has no sampling error
+    } else {
+        stats_df <- data.frame(
+            value = .lr_stats(
+                data,
+                seq_len(nrow(data)),
+                var_a = var_a,
+                average_F = average_F
+            )
+        )
+    }
+
+    # 7. warn once, on the observed value, when the accuracy is not defined
+    if (
+        "accuracy_partial" %in%
+            rownames(stats_df) &&
+            is.nan(stats_df["accuracy_partial", "value"])
+    ) {
+        warning(
+            "`accuracy_partial` is NaN because cov(partial, whole) is negative.",
+            call. = FALSE
+        )
+    }
+
+    # 8. (optional) plot
+    p <- if (isTRUE(plot)) {
+        group <- if (isTRUE(plot_subgroups)) {
+            val_group[[2]][match(data$id, val_ids)]
+        } else {
+            NULL
+        }
+        .plot_lr(
+            data,
+            stats_df,
+            in_gsd = plot_in_gsd,
+            var_a = var_a,
+            verbose = plot_verbose,
+            group = group
+        )
+    } else {
+        NULL
+    }
+
+    return(list(stats = .new_stats(stats_df), plot = p))
 }
 
 #' Turn an ID + value input into a two-column data frame
@@ -369,34 +407,39 @@ validate_lr <- function(
 #' @return Data frame with columns `id` and `<arg>`.
 #' @noRd
 .lr_input <- function(x, arg) {
-  if (!is.data.frame(x)) {
-    stop(
-      "`", arg, "` must be a data frame with IDs in column 1 and values in ",
-      "column 2.",
-      call. = FALSE
-    )
-  }
-  x <- as.data.frame(x) # data.table / tibble: x[[i]] then returns a vector
-  if (ncol(x) < 2L) {
-    stop("`", arg, "` needs at least 2 columns (ID, value).", call. = FALSE)
-  }
-  if (!is.numeric(x[[2]])) {
-    stop("Column 2 of `", arg, "` must be numeric.", call. = FALSE)
-  }
-  ids <- .as_id(x[[1]])
-  if (anyNA(ids)) {
-    stop("`", arg, "` has missing IDs.", call. = FALSE)
-  }
-  if (anyDuplicated(ids) > 0L) {
-    stop(
-      "`", arg, "` has duplicated IDs, e.g. ",
-      .show_some(unique(ids[duplicated(ids)])), ".",
-      call. = FALSE
-    )
-  }
-  out <- data.frame(id = ids, value = x[[2]], stringsAsFactors = FALSE)
-  names(out)[2] <- arg
-  return(out)
+    if (!is.data.frame(x)) {
+        stop(
+            "`",
+            arg,
+            "` must be a data frame with IDs in column 1 and values in ",
+            "column 2.",
+            call. = FALSE
+        )
+    }
+    x <- as.data.frame(x) # data.table / tibble: x[[i]] then returns a vector
+    if (ncol(x) < 2L) {
+        stop("`", arg, "` needs at least 2 columns (ID, value).", call. = FALSE)
+    }
+    if (!is.numeric(x[[2]])) {
+        stop("Column 2 of `", arg, "` must be numeric.", call. = FALSE)
+    }
+    ids <- .as_id(x[[1]])
+    if (anyNA(ids)) {
+        stop("`", arg, "` has missing IDs.", call. = FALSE)
+    }
+    if (anyDuplicated(ids) > 0L) {
+        stop(
+            "`",
+            arg,
+            "` has duplicated IDs, e.g. ",
+            .show_some(unique(ids[duplicated(ids)])),
+            ".",
+            call. = FALSE
+        )
+    }
+    out <- data.frame(id = ids, value = x[[2]], stringsAsFactors = FALSE)
+    names(out)[2] <- arg
+    return(out)
 }
 
 #' LR statistics on one (re)sample
@@ -410,33 +453,33 @@ validate_lr <- function(
 #' @return Named numeric vector.
 #' @noRd
 .lr_stats <- function(data, indices, var_a = NULL, average_F = NULL) {
-  p <- data$partial[indices]
-  w <- data$whole[indices]
-  cov_pw <- stats::cov(p, w)
+    p <- data$partial[indices]
+    w <- data$whole[indices]
+    cov_pw <- stats::cov(p, w)
 
-  out <- c(n = length(p), level_bias = mean(p) - mean(w))
-  if (!is.null(var_a)) {
-    out["level_bias_in_GSD"] <- out[["level_bias"]] / sqrt(var_a)
-  }
-  out["dispersion_bias"] <- cov_pw / stats::var(p)
+    out <- c(n = length(p), level_bias = mean(p) - mean(w))
+    if (!is.null(var_a)) {
+        out["level_bias_in_GSD"] <- out[["level_bias"]] / sqrt(var_a)
+    }
+    out["dispersion_bias"] <- cov_pw / stats::var(p)
 
-  # average inbreeding of the (resampled) animals when it is a column
-  avg_F <- if ("inbreeding" %in% names(data)) {
-    mean(data$inbreeding[indices])
-  } else {
-    average_F
-  }
-  if (!is.null(var_a) && !is.null(avg_F)) {
-    ratio <- cov_pw / ((1 - avg_F) * var_a)
-    # NaN without sqrt()'s warning, which would fire on every resample
-    out["accuracy_partial"] <- if (ratio >= 0) sqrt(ratio) else NaN
-    out["average_F"] <- avg_F
-    out["var_a"] <- var_a
-  }
+    # average inbreeding of the (resampled) animals when it is a column
+    avg_F <- if ("inbreeding" %in% names(data)) {
+        mean(data$inbreeding[indices])
+    } else {
+        average_F
+    }
+    if (!is.null(var_a) && !is.null(avg_F)) {
+        ratio <- cov_pw / ((1 - avg_F) * var_a)
+        # NaN without sqrt()'s warning, which would fire on every resample
+        out["accuracy_partial"] <- if (ratio >= 0) sqrt(ratio) else NaN
+        out["average_F"] <- avg_F
+        out["var_a"] <- var_a
+    }
 
-  out["rho"] <- stats::cor(p, w)
-  out["inc_acc"] <- 1 / out[["rho"]]
-  return(out)
+    out["rho"] <- stats::cor(p, w)
+    out["inc_acc"] <- 1 / out[["rho"]]
+    return(out)
 }
 
 #' Scatter plot of the whole on the partial EBVs
@@ -453,64 +496,76 @@ validate_lr <- function(
 #' @param group Optional group labels, aligned with the rows of `data`.
 #' @return A ggplot object.
 #' @noRd
-.plot_lr <- function(data, stats_df, in_gsd = FALSE, var_a = NULL,
-                     verbose = FALSE, group = NULL) {
-  axis_scale <- if (isTRUE(in_gsd)) sqrt(var_a) else 1
-  unit <- if (isTRUE(in_gsd)) " (GSD)" else ""
-  plot_data <- data.frame(
-    partial = data$partial / axis_scale,
-    whole = data$whole / axis_scale
-  )
-
-  # the slope does not depend on the scale; the intercept is recomputed on it
-  slope <- stats_df["dispersion_bias", "value"]
-  intercept <- mean(plot_data$whole) - slope * mean(plot_data$partial)
-
-  if (is.null(group)) {
-    mapping <- ggplot2::aes(x = .data$partial, y = .data$whole)
-  } else {
-    plot_data$group <- as.factor(group)
-    mapping <- ggplot2::aes(
-      x = .data$partial,
-      y = .data$whole,
-      colour = .data$group
+.plot_lr <- function(
+    data,
+    stats_df,
+    in_gsd = FALSE,
+    var_a = NULL,
+    verbose = FALSE,
+    group = NULL
+) {
+    axis_scale <- if (isTRUE(in_gsd)) sqrt(var_a) else 1
+    unit <- if (isTRUE(in_gsd)) " (GSD)" else ""
+    plot_data <- data.frame(
+        partial = data$partial / axis_scale,
+        whole = data$whole / axis_scale
     )
-  }
 
-  p <- ggplot2::ggplot(plot_data, mapping) +
-    ggplot2::geom_abline(slope = 1, intercept = 0, colour = "grey50") +
-    ggplot2::geom_point(alpha = 0.5) +
-    ggplot2::geom_abline(slope = slope, intercept = intercept,
-                         colour = "blue") +
-    ggplot2::coord_fixed(ratio = 1) +
-    ggplot2::labs(
-      x = paste0("EBV partial", unit),
-      y = paste0("EBV whole", unit)
-    ) +
-    ggplot2::theme_bw()
+    # the slope does not depend on the scale; the intercept is recomputed on it
+    slope <- stats_df["dispersion_bias", "value"]
+    intercept <- mean(plot_data$whole) - slope * mean(plot_data$partial)
 
-  # the colour label only exists when there is a colour aesthetic
-  if (!is.null(group)) {
-    p <- p + ggplot2::labs(colour = "Group")
-  }
-
-  if (isTRUE(verbose)) {
-    lb <- if (isTRUE(in_gsd)) {
-      paste0(
-        "level bias (GSD): ",
-        round(stats_df["level_bias_in_GSD", "value"], 3)
-      )
+    if (is.null(group)) {
+        mapping <- ggplot2::aes(x = .data$partial, y = .data$whole)
     } else {
-      paste0("level bias: ", round(stats_df["level_bias", "value"], 3))
+        plot_data$group <- as.factor(group)
+        mapping <- ggplot2::aes(
+            x = .data$partial,
+            y = .data$whole,
+            colour = .data$group
+        )
     }
-    p <- p + ggplot2::labs(
-      subtitle = paste0("N. animals: ", nrow(plot_data)),
-      caption = paste0(
-        lb,
-        "; dispersion: ", round(stats_df["dispersion_bias", "value"], 3),
-        "; rho: ", round(stats_df["rho", "value"], 3)
-      )
-    )
-  }
-  return(p)
+
+    p <- ggplot2::ggplot(plot_data, mapping) +
+        ggplot2::geom_abline(slope = 1, intercept = 0, colour = "grey50") +
+        ggplot2::geom_point(alpha = 0.5) +
+        ggplot2::geom_abline(
+            slope = slope,
+            intercept = intercept,
+            colour = "blue"
+        ) +
+        ggplot2::coord_fixed(ratio = 1) +
+        ggplot2::labs(
+            x = paste0("EBV partial", unit),
+            y = paste0("EBV whole", unit)
+        ) +
+        ggplot2::theme_bw()
+
+    # the colour label only exists when there is a colour aesthetic
+    if (!is.null(group)) {
+        p <- p + ggplot2::labs(colour = "Group")
+    }
+
+    if (isTRUE(verbose)) {
+        lb <- if (isTRUE(in_gsd)) {
+            paste0(
+                "level bias (GSD): ",
+                round(stats_df["level_bias_in_GSD", "value"], 3)
+            )
+        } else {
+            paste0("level bias: ", round(stats_df["level_bias", "value"], 3))
+        }
+        p <- p +
+            ggplot2::labs(
+                subtitle = paste0("N. animals: ", nrow(plot_data)),
+                caption = paste0(
+                    lb,
+                    "; dispersion: ",
+                    round(stats_df["dispersion_bias", "value"], 3),
+                    "; rho: ",
+                    round(stats_df["rho", "value"], 3)
+                )
+            )
+    }
+    return(p)
 }

@@ -52,8 +52,11 @@
 #' @export
 print.validatoR_stats <- function(x, digits = 4, ...) {
   if (
-    !(is.numeric(digits) && length(digits) == 1L && is.finite(digits) &&
-      digits >= 1 && digits == round(digits))
+    !(is.numeric(digits) &&
+      length(digits) == 1L &&
+      is.finite(digits) &&
+      digits >= 1 &&
+      digits == round(digits))
   ) {
     stop("`digits` must be a single whole number of at least 1.", call. = FALSE)
   }

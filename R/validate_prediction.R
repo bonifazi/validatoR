@@ -93,7 +93,9 @@ validate_prediction <- function(
   ) {
     stop("`h2` must be a single number in (0, 1].", call. = FALSE)
   }
-  if (!(is.logical(bootstrap) && length(bootstrap) == 1L && !is.na(bootstrap))) {
+  if (
+    !(is.logical(bootstrap) && length(bootstrap) == 1L && !is.na(bootstrap))
+  ) {
     stop("`bootstrap` must be TRUE or FALSE.", call. = FALSE)
   }
   if (!(is.logical(plot) && length(plot) == 1L && !is.na(plot))) {
