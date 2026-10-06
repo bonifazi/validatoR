@@ -8,6 +8,7 @@ validate_prediction(
   prediction,
   target,
   h2 = NULL,
+  var_a = NULL,
   bootstrap = FALSE,
   n_boot = 10000L,
   ncpus = 1L,
@@ -15,58 +16,96 @@ validate_prediction(
 )
 }
 \arguments{
-\item{prediction}{Numeric vector of predictions, plotted on the X axis
-(e.g. EBVs from a (genomic) evaluation).}
+\item{prediction}{A numeric vector of predictions, for example EBVs from a
+(genomic) evaluation. It is plotted on the X axis.}
 
-\item{target}{Numeric vector of the values the predictions are meant to
-predict, plotted on the Y axis. For example pre-corrected phenotypes or true breeding values.
-Same length and order as \code{prediction}.}
+\item{target}{A numeric vector of the values the predictions are meant to
+predict, for example pre-corrected phenotypes or true breeding values. It
+has the same length and order as \code{prediction}, and is plotted on the Y
+axis.}
 
-\item{h2}{Optional heritability, a single number in (0, 1]. When given,
-\code{accuracy = correlation / sqrt(h2)} is also returned. Only meaningful
-when \code{target} is a pre-corrected phenotype and individuals are validated
-on their own records; leave as \code{NULL} (default) otherwise.}
+\item{h2}{Optional single number in (0, 1]: the heritability. When provided,
+\code{accuracy = correlation / sqrt(h2)} is also returned. It is only
+meaningful when \code{target} is a pre-corrected phenotype and the animals are
+validated on their own records. Defaults to \code{NULL}.}
+
+\item{var_a}{Optional single positive number: the additive genetic variance.
+When provided, the root mean squared error in genetic standard deviations,
+\code{rmse_in_GSD}, is also returned. Defaults to \code{NULL}.}
 
 \item{bootstrap}{Logical. If \code{TRUE}, standard errors are estimated by
-bootstrapping over individuals with replacement. default is \code{FALSE}.}
+bootstrapping over animals with replacement. Defaults to \code{FALSE}.}
 
-\item{n_boot}{Integer. Number of bootstrap resamples. default is \code{10000L}.}
+\item{n_boot}{A single whole number of at least 2: the number of bootstrap
+resamples. Defaults to \code{10000}.}
 
-\item{ncpus}{Integer. CPUs used for the bootstrap; \code{1} runs serially (default).}
+\item{ncpus}{A single whole number of at least 1: the number of CPUs used
+for the bootstrap. Defaults to \code{1}, which runs serially.}
 
-\item{plot}{Logical. If \code{TRUE}, also return a ggplot2 scatter plot of \code{target}
-against \code{prediction}. Axes labels are generic and can be relabelled by adding ggplot2 layers, e.g.
-\code{+ ggplot2::labs(x = ..., y = ...)}.}
+\item{plot}{Logical. If \code{TRUE}, also return a ggplot2 scatter plot of
+\code{target} on \code{prediction}, with a grey line of slope 1 and a blue line of
+the fitted regression. The axis labels are generic; relabel them by adding
+\code{+ ggplot2::labs(x = ..., y = ...)}. Defaults to \code{FALSE}.}
 }
 \value{
-A list with \code{stats}, a data frame with column \code{value} (and \code{SE}
-when \code{bootstrap = TRUE}) and one row per statistic, and \code{plot}, a ggplot
-object or \code{NULL}.
-}
-\description{
-Compares predictions, for example (genomic) EBVs, with the
-values they are meant to predict (the \code{target}), such as pre-corrected
-phenotypes, raw phenotypes, true breeding values, or (genomic) EBVs from a more complete/other evaluation,
-for a set of validation individuals. Returns the correlation, the regression statistics
-of the target on the prediction (slope and intercept) and the mean difference.
-When \code{h2} is supplied, the correlation is also divided by \code{sqrt(h2)} to
-give an accuracy, which is needed when validating for pre-corrected phenotypes.
-Optionally, standard errors are estimated by bootstrapping over individuals with replacement.
-Optionally, a scatter plot of the target on the predictions is returned.
-}
-\details{
-The statistics regress \code{target} on \code{prediction}, so a
-slope of 1 means no dispersion bias. With \code{x} the predictions and \code{y} the
-target:
+A list with two elements, \code{stats} and \code{plot}.
+
+\code{stats} is a data frame with one row per statistic and a column \code{value}.
+With \code{bootstrap = TRUE} it also has a column \code{SE}, the bootstrap standard
+error (\code{NA} for \code{n}). The rows are, with \code{x} being the predictions and
+\code{y} being the target:
 \itemize{
-\item \code{n}: number of pairs used (it has no standard error)
-\item \code{correlation}: \code{cor(x, y)}
-\item \code{slope}: \code{cov(x, y) / var(x)}, the regression of \code{y} on \code{x}
-\item \code{intercept}: \code{mean(y) - slope * mean(x)}
-\item \code{mean_diff}: \code{mean(x) - mean(y)}
-\item \code{accuracy}: \code{correlation / sqrt(h2)}, only when \code{h2} is given
+\item \code{n}: the number of pairs used.
+\item \code{correlation}: \code{cor(x, y)}.
+\item \code{slope}: \code{cov(x, y) / var(x)}, the regression of \code{y} on \code{x}. 1 means no
+dispersion bias.
+\item \code{intercept}: \code{mean(y) - slope * mean(x)}.
+\item \code{mean_diff}: \code{mean(x) - mean(y)}.
+\item \code{mse}: \code{mean((x - y)^2)}.
+\item \code{rmse}: \code{sqrt(mse)}.
+\item \code{rmse_in_GSD}: \code{rmse / sqrt(var_a)}. Only when \code{var_a} is provided.
+\item \code{accuracy}: \code{correlation / sqrt(h2)}. Only when \code{h2} is provided.
 }
 
+\code{plot} is a ggplot object when \code{plot = TRUE}, and \code{NULL} otherwise.
+}
+\description{
+Compares predictions, for example (genomic) EBVs, with the values they are
+meant to predict (the \code{target}), for a set of validation animals. The target
+can be pre-corrected or raw phenotypes, true breeding values, or (genomic)
+EBVs from a more complete or different evaluation. Returns the correlation,
+the regression of the target on the prediction (slope and intercept), the
+mean difference, and the mean squared error (MSE) and its square root (RMSE).
+Optionally, standard errors are estimated by bootstrapping over animals, and
+a scatter plot of the target on the predictions is returned.
+}
+\section{Regression of the target on the prediction}{
+The slope and the intercept come from regressing \code{target} on \code{prediction},
+so a slope of 1 means no dispersion bias. \code{mean_diff} is the level bias: the
+mean of the predictions minus the mean of the target.
+}
+
+\section{Mean squared error}{
+\code{mse} and \code{rmse} measure the distance between each prediction and its
+target, so they include the level bias and the dispersion: \code{mse} equals
+\code{mean_diff^2} plus the variance of \code{prediction - target} (with \code{n} as the
+divisor).
+Note: They are only meaningful when both vectors are on the same scale,
+for example a partial and a whole EBV, or EBVs and true breeding values, and
+are misleading for EBVs against a pre-corrected phenotype.
+
+\code{rmse} is the error of the predictions as they are, \code{prediction - target}.
+Note: it is not the residual error around the fitted regression line (the
+textbook regression formula, with the fitted value in place of the
+prediction).
+}
+
+\section{Accuracy}{
+\code{accuracy} divides the correlation by \code{sqrt(h2)}. It is valid for individual
+validation with a pre-corrected phenotype as \code{target}.
+}
+
+\section{Missing values and errors}{
 Missing values (\code{NA}) are not allowed in either vector, because dropping
 them could silently change which animals are compared; the function stops
 with an error. Remove the affected animals from both vectors first. A
@@ -74,21 +113,45 @@ with an error. Remove the affected animals from both vectors first. A
 3 pairs, also gives an error, because the correlation and the slope are not
 defined.
 }
+
 \examples{
 # `pheno` is a pre-corrected phenotype simulated with h2 = 0.3, so passing
 # `h2` gives the accuracy of the partial EBVs (about 0.5 for this toy data)
-res <- validate_prediction(toy_validation$partial, toy_validation$pheno, h2 = 0.3)
+res <- validate_prediction(
+  toy_validation$partial,
+  toy_validation$pheno,
+  h2 = 0.3
+)
 res$stats
-# get SE via bootstrapping
-res_boot <- validate_prediction(toy_validation$partial, toy_validation$pheno,
-                                bootstrap = TRUE, n_boot = 200, h2 = 0.3)
-res_boot$stats
+
 # without `h2` (e.g. when comparing against another EBV such as `whole`) no
-# accuracy is returned
-validate_prediction(toy_validation$partial, toy_validation$whole)$stats
+# accuracy is returned; `var_a` adds the RMSE in genetic standard deviations
+validate_prediction(
+  toy_validation$partial,
+  toy_validation$whole,
+  var_a = 300
+)$stats
+
+# bootstrap standard errors (few resamples, to keep the example fast)
+validate_prediction(
+  toy_validation$partial,
+  toy_validation$pheno,
+  h2 = 0.3,
+  bootstrap = TRUE,
+  n_boot = 200
+)$stats
+
 # scatter plot of the target on the prediction (grey line: slope 1,
 # blue line: fitted regression)
-res_plot <- validate_prediction(toy_validation$partial, toy_validation$pheno,
-                                h2 = 0.3, plot = TRUE)
+res_plot <- validate_prediction(
+  toy_validation$partial,
+  toy_validation$pheno,
+  h2 = 0.3,
+  plot = TRUE
+)
 res_plot$plot
+}
+\seealso{
+\code{\link[=validate_lr]{validate_lr()}} to compare a partial with a whole evaluation using
+the LR method.
 }
