@@ -18,9 +18,10 @@
 
 #' Print a table of validation statistics
 #'
-#' Prints the `stats` table returned by [validate_*] functions, such as [validate_lr()] and
-#' [validate_prediction()] with a fixed number of significant digits and
-#' without scientific notation, for example `0.8609` and `0.00000004922`.
+#' Prints the `stats` table returned by the validation functions, such as
+#' [validate_lr()] and [validate_prediction()], with a fixed number of
+#' significant digits and without scientific notation, for example `0.8609` and
+#' `0.00000004922`.
 #' Only the display changes: the values in the table keep their full
 #' precision.
 #'

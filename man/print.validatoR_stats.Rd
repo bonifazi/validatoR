@@ -19,9 +19,10 @@ significant digits to show. Defaults to \code{4}.}
 \code{x}, invisibly.
 }
 \description{
-Prints the \code{stats} table returned by \code{\link[=validate_lr]{validate_lr()}} and
-\code{\link[=validate_prediction]{validate_prediction()}} with a fixed number of significant digits and
-without scientific notation, for example \code{0.8609} and \code{0.00000004922}.
+Prints the \code{stats} table returned by the validation functions, such as
+\code{\link[=validate_lr]{validate_lr()}} and \code{\link[=validate_prediction]{validate_prediction()}}, with a fixed number of
+significant digits and without scientific notation, for example \code{0.8609} and
+\code{0.00000004922}.
 Only the display changes: the values in the table keep their full
 precision.
 }
