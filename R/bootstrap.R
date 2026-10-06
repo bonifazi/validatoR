@@ -23,7 +23,7 @@
 #' @param n_boot Integer. Number of bootstrap resamples.
 #' @param ncpus Integer. Number of CPUs; `1` (default) runs serially.
 #' @param ... Extra named arguments passed unchanged to `stat_fun` on every
-#'   resample and every worker (e.g. `VAR_A`, `h2`).
+#'   resample and every worker (e.g. `var_a`, `h2`).
 #'
 #' @return A data.frame with one row per statistic (row names = statistic
 #'   names) and columns `value` (estimate on the original data) and `SE`

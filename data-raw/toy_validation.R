@@ -29,7 +29,7 @@ target_dispersion <- 0.90   # cov(p,w)/var(p); <1 = over-dispersed predictions
 target_rho        <- 0.85   # cor(partial, whole) = ratio of accuracies
 
 sd_partial <- 10            # SD of partial EBVs
-VAR_A      <- 300           # true additive genetic variance (GSD ~ 17.3)
+var_a      <- 300           # true additive genetic variance (GSD ~ 17.3)
 mean_inb   <- 0.05          # average inbreeding
 h2         <- 0.30          # heritability of the pre-corrected phenotype `pheno`
 
@@ -58,9 +58,9 @@ F_coef <- pmax(0, rnorm(n, mean = mean_inb, sd = 0.01))
 # Build a true breeding value (tbv) around `whole`, and a phenotype around tbv:
 #   tbv   = whole + u,   u is independent of `whole` and `partial`
 #           -> cov(whole, tbv) = var(whole), i.e. `whole` is an unbiased EBV of tbv
-#           -> var(tbv) = VAR_A, so var(u) = VAR_A - var(whole)
-#   pheno = tbv + e,     e independent error added, var(e) = VAR_A * (1 - h2) / h2
-#           -> var(tbv) / var(pheno) = VAR_A / var(pheno) = h2
+#           -> var(tbv) = var_a, so var(u) = var_a - var(whole)
+#   pheno = tbv + e,     e independent error added, var(e) = var_a * (1 - h2) / h2
+#           -> var(tbv) / var(pheno) = var_a / var(pheno) = h2
 # Consequences (in expectation), step by step:
 #
 # 1) cov(partial, pheno) = cov(partial, whole) = dispersion * var(partial)
@@ -75,32 +75,32 @@ F_coef <- pmax(0, rnorm(n, mean = mean_inb, sd = 0.01))
 #    cov(partial, whole) = b * cov(partial, partial) = b * var(partial)
 #    -> 0.90 * 10^2 = 90
 #
-# 2) cor(partial, pheno) = dispersion * sd_partial / sqrt(VAR_A / h2)
+# 2) cor(partial, pheno) = dispersion * sd_partial / sqrt(var_a / h2)
 #    
-#    var(pheno) = var(tbv) + var(e) = VAR_A + VAR_A * (1 - h2) / h2 = VAR_A / h2
+#    var(pheno) = var(tbv) + var(e) = var_a + var_a * (1 - h2) / h2 = var_a / h2
 #    (tbv and e are independent, so the variances add)
-#    -> sd(pheno) = sqrt(VAR_A / h2) = sqrt(300 / 0.3) = 31.6
+#    -> sd(pheno) = sqrt(var_a / h2) = sqrt(300 / 0.3) = 31.6
 #    cor(partial, pheno) = cov(partial, pheno) / (sd(partial) * sd(pheno))
-#                        = dispersion * var(partial) / (sd_partial * sqrt(VAR_A / h2))
-#                        = dispersion * sd_partial / sqrt(VAR_A / h2)
+#                        = dispersion * var(partial) / (sd_partial * sqrt(var_a / h2))
+#                        = dispersion * sd_partial / sqrt(var_a / h2)
 #    -> 90 / (10 * 31.6) = 0.285
 #
-# 3) cor(partial, pheno) / sqrt(h2) = dispersion * sd_partial / sqrt(VAR_A)
+# 3) cor(partial, pheno) / sqrt(h2) = dispersion * sd_partial / sqrt(var_a)
 #    
-#    sqrt(VAR_A / h2) = sqrt(VAR_A) / sqrt(h2), so
-#    cor(partial, pheno) = dispersion * sd_partial * sqrt(h2) / sqrt(VAR_A)
+#    sqrt(var_a / h2) = sqrt(var_a) / sqrt(h2), so
+#    cor(partial, pheno) = dispersion * sd_partial * sqrt(h2) / sqrt(var_a)
 #    ->
-#    cor(partial, pheno) / sqrt(h2) = dispersion * sd_partial / sqrt(VAR_A)
+#    cor(partial, pheno) / sqrt(h2) = dispersion * sd_partial / sqrt(var_a)
 #    -> 0.285 / 0.548 = 0.52   (= 9 / 17.3)
 #    This is cor(partial, tbv): cov(partial, tbv) = cov(partial, whole + u) = 90
-#    by the same argument as in 1), and sd(tbv) = sqrt(VAR_A) = 17.3, so
+#    by the same argument as in 1), and sd(tbv) = sqrt(var_a) = 17.3, so
 #    cor(partial, tbv) = 90 / (10 * 17.3) = 0.52.
 #    It is the accuracy that validate_prediction() should recover when it is
 #    given h2.
 var_whole  <- b^2 * sd_partial^2 + sd_e^2   # expected variance of `whole`
-stopifnot(VAR_A > var_whole)                # otherwise var(u) would be negative
-sd_u       <- sqrt(VAR_A - var_whole)
-sd_e_pheno <- sqrt(VAR_A * (1 - h2) / h2)
+stopifnot(var_a > var_whole)                # otherwise var(u) would be negative
+sd_u       <- sqrt(var_a - var_whole)
+sd_e_pheno <- sqrt(var_a * (1 - h2) / h2)
 tbv        <- whole + rnorm(n, mean = 0, sd = sd_u)        # not stored
 pheno      <- tbv + rnorm(n, mean = 0, sd = sd_e_pheno)
 
@@ -120,19 +120,19 @@ realised <- c(
                   var(toy_validation$partial),
   rho         = cor(toy_validation$partial, toy_validation$whole),
   accuracy_p  = sqrt(cov(toy_validation$partial, toy_validation$whole) /
-                       ((1 - mean(toy_validation$inbreeding)) * VAR_A))
+                       ((1 - mean(toy_validation$inbreeding)) * var_a))
 )
 print(round(realised, 4))
 # Targets: level_bias 0.75, dispersion 0.90, rho 0.85 (sampling noise aside).
-# VAR_A above is the value to pass to the VAR_A argument in examples/tests.
+# var_a above is the value to pass to the var_a argument in examples/tests.
 
 realised_pheno <- c(
   cor_partial_pheno = cor(toy_validation$partial, toy_validation$pheno),
   cor_partial_pheno_scaled = cor(toy_validation$partial, toy_validation$pheno) / sqrt(h2)
 )
 print(round(realised_pheno, 4))
-# Targets: cor_partial_pheno = b * sd_partial / sqrt(VAR_A / h2) = 0.285,
-#          accuracy_via_h2   = b * sd_partial / sqrt(VAR_A)      = 0.520
+# Targets: cor_partial_pheno = b * sd_partial / sqrt(var_a / h2) = 0.285,
+#          accuracy_via_h2   = b * sd_partial / sqrt(var_a)      = 0.520
 # (sampling SE of about 0.02 and 0.04). Pass h2 = 0.3 to validate_prediction().
 
 usethis::use_data(toy_validation, overwrite = TRUE)
