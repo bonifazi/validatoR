@@ -5,15 +5,19 @@
 \alias{toy_validation}
 \title{Toy validation data}
 \format{
+\subsection{\code{toy_validation}}{
+
 A data frame with 2000 rows and 6 columns:
 \describe{
 \item{id}{Animal ID.}
-\item{partial}{EBV from the partial evaluation.}
-\item{whole}{EBV from the whole evaluation.}
-\item{pheno}{Pre-corrected phenotype, simulated with a heritability of
-0.3.}
+\item{partial}{EBV from the partial evaluation, in trait units.}
+\item{whole}{EBV from the whole evaluation, in trait units.}
+\item{pheno}{Pre-corrected phenotype, in trait units, simulated with a
+heritability of 0.3.}
 \item{group}{Factor with 4 cohorts.}
-\item{inbreeding}{Inbreeding coefficient.}
+\item{inbreeding}{Inbreeding coefficient, as a coefficient and not a
+percentage.}
+}
 }
 }
 \source{
