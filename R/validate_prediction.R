@@ -84,6 +84,7 @@ validate_prediction <- function(
   if (!is.numeric(prediction) || !is.numeric(target)) {
     stop("`prediction` and `target` must be numeric vectors.", call. = FALSE)
   }
+  # check that the two vectors are paired
   if (length(prediction) != length(target)) {
     stop("`prediction` and `target` must have the same length.", call. = FALSE)
   }
@@ -117,9 +118,11 @@ validate_prediction <- function(
     )
   }
   data <- data.frame(prediction = prediction, target = target)
+  # check that there are enough pairs
   if (nrow(data) < 3L) {
     stop("At least 3 pairs are needed.", call. = FALSE)
   }
+  # check that both vectors have variation, otherwise slope and correlation are undefined
   if (length(unique(prediction)) < 2L) {
     stop(
       "`prediction` has no variation (all values are equal), so the ",
@@ -177,9 +180,11 @@ validate_prediction <- function(
 #' @return Named numeric vector.
 #' @noRd
 .general_stats <- function(data, indices, h2 = NULL) {
+  # values of the (re)sampled pairs
   x <- data$prediction[indices]
   y <- data$target[indices]
 
+  # regression of target on prediction
   slope <- stats::cov(x, y) / stats::var(x)
   out <- c(
     n = length(x),
@@ -188,6 +193,7 @@ validate_prediction <- function(
     intercept = mean(y) - slope * mean(x),
     mean_diff = mean(x) - mean(y)
   )
+  # compute accuracy only when h2 is provided
   if (!is.null(h2)) {
     out["accuracy"] <- out[["correlation"]] / sqrt(h2)
   }
