@@ -174,14 +174,8 @@ validate_lr <- function(
     .check_ncpus(ncpus)
 
     # check for var_a being a single positive number
-    if (
-        !is.null(var_a) &&
-            !(is.numeric(var_a) &&
-                length(var_a) == 1L &&
-                is.finite(var_a) &&
-                var_a > 0)
-    ) {
-        stop("`var_a` must be a single positive number.", call. = FALSE)
+    if (!is.null(var_a)) {
+        .check_positive_number(var_a, "var_a")
     }
     # check that plot_in_gsd = TRUE comes with var_a
     if (isTRUE(plot_in_gsd) && is.null(var_a)) {
