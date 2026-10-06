@@ -104,3 +104,34 @@
   ids[is.na(x)] <- NA_character_
   return(ids)
 }
+
+#' Check the IDs and write them as text
+#'
+#' IDs are converted to text (see `.as_id()`), so that numeric and text IDs
+#' match. Stops when an ID is missing or duplicated, because a duplicated ID
+#' would be matched twice (for example, silently weighting a mean).
+#'
+#' @param ids Vector of IDs.
+#' @param arg Name of the argument, used in the error messages.
+#' @return Character vector of the same length as `ids`.
+#' @noRd
+.as_checked_ids <- function(ids, arg) {
+  # convert the IDs to text, so that numeric and text IDs match
+  ids <- .as_id(ids)
+  # check for missing IDs
+  if (anyNA(ids)) {
+    stop("`", arg, "` has missing IDs.", call. = FALSE)
+  }
+  # check for duplicated IDs
+  if (anyDuplicated(ids) > 0L) {
+    stop(
+      "`",
+      arg,
+      "` has duplicated IDs, e.g. ",
+      .show_some(unique(ids[duplicated(ids)])),
+      ".",
+      call. = FALSE
+    )
+  }
+  return(ids)
+}
