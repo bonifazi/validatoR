@@ -17,11 +17,11 @@
 #'
 #' @details `whole` is simulated from `partial`, so the expected LR
 #'   statistics are: level bias 0.75, dispersion 0.90 and rho 0.85. Sampling
-#'   noise moves the realised values slightly. Use `VAR_A = 300` when the
+#'   noise moves the realised values slightly. Use `var_a = 300` when the
 #'   accuracy of the partial EBV is needed.
 #'
 #'   `pheno` is a true breeding value (`whole` plus an independent part, with
-#'   variance `VAR_A`) plus noise, so that its heritability is 0.3. Because
+#'   variance `var_a`) plus noise, so that its heritability is 0.3. Because
 #'   of that, `validate_prediction(partial, pheno, h2 = 0.3)` returns an
 #'   accuracy of about 0.52 (the correlation between `partial` and the true
 #'   breeding value), with a sampling error of about 0.04.
