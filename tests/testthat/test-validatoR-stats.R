@@ -29,8 +29,11 @@ test_that("the stored values keep their full precision", {
   expect_equal(stats["rho", "value"], cor(x, y))
   expect_equal(stats["dispersion_bias", "value"], cov(x, y) / var(x))
   # more digits than the printed table shows
-  expect_false(isTRUE(all.equal(stats["rho", "value"], signif(cor(x, y), 4),
-                                tolerance = 1e-12)))
+  expect_false(isTRUE(all.equal(
+    stats["rho", "value"],
+    signif(cor(x, y), 4),
+    tolerance = 1e-12
+  )))
 })
 
 test_that("the values can be read in the usual ways", {
@@ -54,7 +57,9 @@ test_that("printing uses fixed notation with 4 significant digits", {
   expect_false(any(grepl("e[+-][0-9]", shown)))
   expect_true(any(grepl("^n +2000", shown)))
   expect_true(any(grepl(
-    format(signif(stats["rho", "value"], 4)), shown, fixed = TRUE
+    format(signif(stats["rho", "value"], 4)),
+    shown,
+    fixed = TRUE
   )))
 })
 
@@ -75,12 +80,36 @@ test_that("digits changes the display and is checked", {
   shown_7 <- capture.output(print(stats, digits = 7))
 
   expect_true(any(grepl(
-    format(signif(stats["rho", "value"], 7)), shown_7, fixed = TRUE
+    format(signif(stats["rho", "value"], 7)),
+    shown_7,
+    fixed = TRUE
   )))
   expect_error(print(stats, digits = 0), "digits")
   expect_error(print(stats, digits = 2.5), "digits")
   expect_error(print(stats, digits = c(2, 3)), "digits")
   expect_error(print(stats, digits = NA), "digits")
+})
+
+test_that("extra arguments are passed on to print.data.frame()", {
+  stats <- lr_stats_example()
+  default <- capture.output(print(stats))
+  no_names <- capture.output(print(stats, row.names = FALSE))
+
+  # row.names = FALSE is an argument of print.data.frame(), not of our method
+  expect_true(any(grepl("^rho", default)))
+  expect_false(any(grepl("rho", no_names, fixed = TRUE)))
+  # the values are still formatted by our method
+  expect_true(any(grepl(
+    format(signif(stats["rho", "value"], 4)),
+    no_names,
+    fixed = TRUE
+  )))
+  # and they can be combined with digits
+  expect_true(any(grepl(
+    format(signif(stats["rho", "value"], 7)),
+    capture.output(print(stats, digits = 7, row.names = FALSE)),
+    fixed = TRUE
+  )))
 })
 
 test_that("print() returns the table invisibly and unchanged", {
