@@ -170,6 +170,7 @@ validate_lr <- function(
     .check_n_boot(n_boot)
     .check_ncpus(ncpus)
 
+    # check for var_a being a single positive number
     if (
         !is.null(var_a) &&
             !(is.numeric(var_a) &&
@@ -179,12 +180,14 @@ validate_lr <- function(
     ) {
         stop("`var_a` must be a single positive number.", call. = FALSE)
     }
+    # check that plot_in_gsd = TRUE comes with var_a
     if (isTRUE(plot_in_gsd) && is.null(var_a)) {
         stop(
             "`plot_in_gsd = TRUE` needs `var_a`, the additive genetic variance.",
             call. = FALSE
         )
     }
+    # check for average_F being a single number in [0, 1)
     if (
         !is.null(average_F) &&
             !(is.numeric(average_F) &&
@@ -195,12 +198,14 @@ validate_lr <- function(
     ) {
         stop("`average_F` must be a single number in [0, 1).", call. = FALSE)
     }
+    # check that either average_F or inbreeding is provided, not both
     if (!is.null(average_F) && !is.null(inbreeding)) {
         stop(
             "Provide either `average_F` or `inbreeding`, not both.",
             call. = FALSE
         )
     }
+    # check that inbreeding is provided with bootstrap = TRUE instead of average_F
     if (isTRUE(bootstrap) && !is.null(average_F)) {
         stop(
             "With `bootstrap = TRUE`, provide `inbreeding` (one value per animal) ",
@@ -230,12 +235,18 @@ validate_lr <- function(
     # 3. validation animals
     val_ids <- NULL
     if (is.null(val_group)) {
-        n_left_out <- nrow(p_df) + nrow(w_df) - 2L * nrow(data)
-        if (n_left_out > 0L) {
+        n_only_partial <- nrow(p_df) - nrow(data)
+        n_only_whole <- nrow(w_df) - nrow(data)
+        if (n_only_partial > 0L) {
             message(
-                n_left_out,
-                " animal(s) found in only one of `partial` and ",
-                "`whole` were left out."
+                n_only_partial,
+                " animal(s) in `partial` are not in `whole` and were left out."
+            )
+        }
+        if (n_only_whole > 0L) {
+            message(
+                n_only_whole,
+                " animal(s) in `whole` are not in `partial` and were left out."
             )
         }
     } else {
@@ -247,6 +258,7 @@ validate_lr <- function(
             )
         }
         val_group <- as.data.frame(val_group)
+        # convert the IDs to text, so that numeric and text IDs match
         val_ids <- .as_id(val_group[[1]])
         if (anyNA(val_ids) || anyDuplicated(val_ids) > 0L) {
             stop(
@@ -399,8 +411,10 @@ validate_lr <- function(
 #' Turn an ID + value input into a two-column data frame
 #'
 #' Accepts data.frame, data.table or tibble; keeps column 1 (IDs, as text) and
-#' column 2 (values), named `id` and `arg`. Missing values are checked later,
-#' only for the validation animals.
+#' column 2 (values), named `id` and `arg`. Missing or duplicated IDs are
+#' checked here. Missing values in column 2 are not checked here
+#' (but checked later in other functions) and only for the
+#' validation animals.
 #'
 #' @param x The user input.
 #' @param arg Argument name, used for the value column and in messages.
@@ -423,6 +437,7 @@ validate_lr <- function(
     if (!is.numeric(x[[2]])) {
         stop("Column 2 of `", arg, "` must be numeric.", call. = FALSE)
     }
+    # convert the IDs to text, so that numeric and text IDs match
     ids <- .as_id(x[[1]])
     if (anyNA(ids)) {
         stop("`", arg, "` has missing IDs.", call. = FALSE)

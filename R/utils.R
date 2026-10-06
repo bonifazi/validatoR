@@ -16,9 +16,10 @@
 
 #' Stop unless `x` is a single whole number of at least 2
 #'
-#' Used for the number of bootstrap resamples. `.run_bootstrap()` checks it too,
-#' but with R's default `stopifnot()` message.
-#'
+#' Used for the number of bootstrap resamples.
+#' `.run_bootstrap()` checks it too,but using R's default `stopifnot()` message.
+#' This is a more user-friendly error message.
+#' 
 #' @param x Value to check.
 #' @return `x`, invisibly.
 #' @noRd
@@ -58,7 +59,7 @@
 #' First few elements of a vector, pasted, for error messages
 #'
 #' @param x Vector.
-#' @param k Number of elements to show.
+#' @param k Number of elements to show. Default is 3.
 #' @return A single string.
 #' @noRd
 .show_some <- function(x, k = 3L) {

@@ -10,8 +10,7 @@ Release](https://img.shields.io/github/v/release/bonifazi/validatoR?include_prer
 [![Licence:
 MIT](https://img.shields.io/badge/Licence-MIT-green)](https://github.com/bonifazi/validatoR/blob/main/LICENSE.md)
 [![R-CMD-check](https://github.com/bonifazi/validatoR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/bonifazi/validatoR/actions/workflows/R-CMD-check.yaml)
-[![Codecov test
-coverage](https://codecov.io/gh/bonifazi/validatoR/graph/badge.svg)](https://app.codecov.io/gh/bonifazi/validatoR)
+[![codecov](https://codecov.io/gh/bonifazi/validatoR/graph/badge.svg?token=C596MV7HT2)](https://codecov.io/gh/bonifazi/validatoR)
 <!-- badges: end -->
 
 validatoR validates (genomic) prediction models in animal breeding. You
