@@ -40,11 +40,13 @@ Needed for the level bias in genetic standard deviations, for the accuracy
 of the partial EBVs, and for \code{plot_in_gsd}. Defaults to \code{NULL}.}
 
 \item{average_F}{Optional single number in [0, 1): the average inbreeding of
-the validation animals, used for the accuracy of the partial EBVs. Provide
-either \code{average_F} or \code{inbreeding}, not both. Defaults to \code{NULL}.}
+the validation animals as a coefficient, not a percentage (\code{0.05}, not
+\code{5}), used for the accuracy of the partial EBVs. Provide either \code{average_F}
+or \code{inbreeding}, not both. Defaults to \code{NULL}.}
 
 \item{inbreeding}{Optional data frame with animal IDs in column 1 and
-inbreeding coefficients (numbers in [0, 1)) in column 2. It must include
+inbreeding coefficients (numbers of at least 0, as coefficients and not
+percentages) in column 2. It must include
 every validation animal; other animals are ignored. Use it instead of
 \code{average_F} when \code{bootstrap = TRUE}, so that the average inbreeding is
 recomputed in every resample. Defaults to \code{NULL}.}
@@ -97,7 +99,7 @@ over-dispersed, and values above 1 mean they are under-dispersed.
 \item \code{accuracy_partial}: \code{sqrt(cov(p, w) / ((1 - F) * var_a))}, with \code{F} being the
 average inbreeding of the validation animals. Only when \code{var_a} and
 \code{average_F} or \code{inbreeding} are provided. It is \code{NaN}, with a warning, when
-\code{cov(p, w)} is negative.
+\code{cov(p, w)} is negative or the average inbreeding is 1 or more.
 \item \code{average_F} and \code{var_a}: the values used for \code{accuracy_partial}, returned
 with it so that tables from several groups can be compared.
 \item \code{rho}: \code{cor(p, w)}, the ratio of the accuracies of the partial and the

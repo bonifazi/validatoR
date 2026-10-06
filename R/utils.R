@@ -17,7 +17,7 @@
 #' Stop unless `x` is a single whole number of at least 2
 #'
 #' Used for the number of bootstrap resamples.
-#' `.run_bootstrap()` checks it too,but using R's default `stopifnot()` message.
+#' `.run_bootstrap()` checks it too, but using R's default `stopifnot()` message.
 #' This is a more user-friendly error message.
 #' 
 #' @param x Value to check.
@@ -59,10 +59,11 @@
 #' First few elements of a vector, pasted, for error messages
 #'
 #' @param x Vector.
-#' @param k Number of elements to show. Default is 3.
+#' @param k Number of elements to show. Default to 3.
 #' @return A single string.
 #' @noRd
 .show_some <- function(x, k = 3L) {
+  # first k elements, comma-separated
   out <- paste(x[seq_len(min(k, length(x)))], collapse = ", ")
   return(out)
 }
@@ -78,11 +79,13 @@
 #' @return Character vector of the same length as `x`.
 #' @noRd
 .as_id <- function(x) {
+  # convert IDs to character, keeping numeric IDs in full (no scientific notation like 1e+05), text IDs as they are
   ids <- if (is.numeric(x)) {
     format(x, scientific = FALSE, trim = TRUE)
   } else {
     as.character(x)
   }
+  # keep missing IDs as NA (format() would turn them into "NA")
   ids[is.na(x)] <- NA_character_
   return(ids)
 }
