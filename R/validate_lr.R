@@ -457,23 +457,8 @@ validate_lr <- function(
     if (!is.numeric(x[[2]])) {
         stop("Column 2 of `", arg, "` must be numeric.", call. = FALSE)
     }
-    # convert the IDs to text, so that numeric and text IDs match
-    ids <- .as_id(x[[1]])
-    # check for missing IDs
-    if (anyNA(ids)) {
-        stop("`", arg, "` has missing IDs.", call. = FALSE)
-    }
-    # check for duplicated IDs
-    if (anyDuplicated(ids) > 0L) {
-        stop(
-            "`",
-            arg,
-            "` has duplicated IDs, e.g. ",
-            .show_some(unique(ids[duplicated(ids)])),
-            ".",
-            call. = FALSE
-        )
-    }
+    # IDs as text (numeric and text IDs match), stopping when missing or duplicated
+    ids <- .as_checked_ids(x[[1]], arg)
     # two columns: id, and the values named after the argument
     out <- data.frame(id = ids, value = x[[2]], stringsAsFactors = FALSE)
     names(out)[2] <- arg
