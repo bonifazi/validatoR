@@ -5,3 +5,5 @@
 ^data-raw$
 ^\.github$
 ^\.lintr$
+^doc$
+^Meta$

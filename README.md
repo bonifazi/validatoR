@@ -13,65 +13,101 @@ MIT](https://img.shields.io/badge/Licence-MIT-green)](https://github.com/bonifaz
 [![codecov](https://codecov.io/gh/bonifazi/validatoR/graph/badge.svg?token=C596MV7HT2)](https://codecov.io/gh/bonifazi/validatoR)
 <!-- badges: end -->
 
-validatoR validates (genomic) prediction models in animal breeding. You
-give it predictions, such as (genomic) EBVs, and what they are meant to
-predict, such as pre-corrected phenotypes, EBVs from a later or more
-complete evaluation, true breeding values. It returns validation
-statistics such as correlation, slope, intercept, mean difference and,
-if you supply the heritability, scales for accuracy. Standard errors
-come from a bootstrap via the boot package. Plots are also produced.
+> 🚧 validatoR is currently in beta version and under active
+> development. Functions, arguments and results can change between
+> versions, so try it out, but do not build anything critical on it yet.
+> Feedback and suggestions are very welcome, see [Feedback](#feedback).
+
+validatoR validates (genomic) predictions in animal breeding. Give it
+the EBVs of a “partial” and a “whole” evaluation, or any predictions and
+a target to validate them with, and it will return the bias, the
+dispersion, the correlation and the accuracy, with bootstrap standard
+errors and a plot if you want them.
+
+## What do you want to do?
+
+| You have | Use |
+|:---|:---|
+| An earlier (“partial”) and a later (“whole”) evaluation of the same animals, and you want the level bias, the dispersion bias, accuracy of the partial EBVs (the LR method), and ratio of accuracies | `validate_lr()` |
+| Predictions and a target to validate them with: pre-corrected phenotypes, true breeding values or other EBVs | `validate_prediction()` |
+| EBVs on different bases that must be put on the same base before you compare or validate them | `rebase_ebv()` |
 
 ## Installation
 
-You can install the development version of validatoR from
-[GitHub](https://github.com/) with:
+Install the development version from
+[GitHub](https://github.com/bonifazi/validatoR) using `pak`:
 
 ``` r
 # install.packages("pak")
 pak::pak("bonifazi/validatoR")
 ```
 
-## Example
+or, with the `remotes` package, building the vignette as well:
 
-`toy_validation` ships with the package. It holds 2000 animals with EBVs
-from a partial and a whole evaluation, built so the true answers are
-known.
+``` r
+# install.packages("remotes")
+remotes::install_github("bonifazi/validatoR", build_vignettes = TRUE)
+```
+
+## A first example
+
+`toy_validation` ships together with the package. It has 2,000 simulated
+animals with the EBVs of a partial and a whole evaluation, built so that
+the statistics have known values (level bias 0.75, dispersion bias 0.90,
+rho 0.85). `validate_lr()` takes one data frame per evaluation, with the
+animal IDs in the first column and the EBVs in the second.
 
 ``` r
 library(validatoR)
 
-res <- validate_prediction(
-  prediction = toy_validation$partial,
-  target     = toy_validation$whole,
-  h2         = 0.8
-)
-res$stats
+# get the partial EBV
+partial <- toy_validation[, c("id", "partial")]
+# get the whole EBV
+whole <- toy_validation[, c("id", "whole")]
+
+res <- validate_lr(partial, whole, plot = TRUE)
+res$stats # view the statistics
 #>                    value
-#> n           2000.0000000
-#> correlation    0.8517943
-#> slope          0.8928575
-#> intercept     -0.8295452
-#> mean_diff      0.8609343
-#> accuracy       0.9523350
+#> n                   2000
+#> level_bias          0.75
+#> dispersion_bias      0.9
+#> rho                 0.85
+#> inc_acc            1.176
+res$plot # view the plot
 ```
 
-Add `bootstrap = TRUE` to get standard errors, and `plot = TRUE` for a
-scatter plot of target against prediction.
+<img src="man/figures/README-example-1.png" width="60%" />
+
+No bias means a level bias of 0 and a dispersion bias of 1. In this
+example, the partial EBVs are over-dispersed, as simulated.
+
+With `plot = TRUE`, the function also returns a scatter plot of the
+whole EBVs on the partial EBVs: the grey line has slope 1, and the blue
+line is the regression of the whole EBVs on the partial EBVs.
+
+## Learn more
+
+The `getting-started` vignette walks you through each function step by
+step, with standard errors, plots and validation groups. You can view it
+by running:
 
 ``` r
-set.seed(1)
-res_boot <- validate_prediction(
-  toy_validation$partial, toy_validation$whole,
-  bootstrap = TRUE, n_boot = 200, plot = TRUE
-)
-res_boot$stats
-#>                    value          SE
-#> n           2000.0000000          NA
-#> correlation    0.8517943 0.006197353
-#> slope          0.8928575 0.013108802
-#> intercept     -0.8295452 0.125468557
-#> mean_diff      0.8609343 0.128372423
-res_boot$plot
+vignette("getting-started", package = "validatoR")
 ```
 
-<img src="man/figures/README-example-boot-1.png" width="100%" />
+As for any R package, each function comes with its own help page with
+every argument explained: `?validate_lr`, `?validate_prediction` and
+`?rebase_ebv`.
+
+## Feedback
+
+Because the package is still changing, your feedback helps to shape it:
+what you would like to see implemented, how you would use it, and any
+problem you run into.
+
+- To report a bug or request a feature, open an issue on the [Issues
+  page](https://github.com/bonifazi/validatoR/issues) of the GitHub
+  repository: click “New issue”, describe what you did and what you
+  expected, and paste the error message, if there is one.
+- To reach out directly, please email me (Renzo Bonifazi) at
+  <renzo.bonifazi@outlook.it>.

@@ -1,0 +1,295 @@
+---
+title: "Getting started with validatoR"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with validatoR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 5,
+  fig.align = "center"
+)
+```
+
+This vignette shows what validatoR can do, on a small simulated data set. It
+assumes you know what an EBV is and how a genetic evaluation is run, and it
+explains only what is specific to the package.
+
+## Which function to use
+
+| You have | You want | Use |
+|:---------|:---------|:----|
+| Two evaluations of the same animals: a partial one, which leaves out the records of the validation animals, and a whole one, which uses all records | The level bias, the dispersion bias, the accuracy of the partial EBVs (the LR method), and the ratio of accuracies | `validate_lr()` |
+| Predictions and a target to validate them with: pre-corrected phenotypes, true breeding values from a simulation, or other EBVs | The correlation, the regression of the target on the prediction, the mean difference and the MSE, and the accuracy when the target is a pre-corrected phenotype | `validate_prediction()` |
+| EBVs expressed on different bases | EBVs on a common base before you compare or validate them | `rebase_ebv()` |
+
+The validation animals are the animals whose EBVs you validate, for example the
+youngest generation. The LR method assumes that the evaluation accounts for
+selection and that the validation set is large and diverse (see Further
+reading). All three functions can also return a plot.
+
+## The example data
+
+```{r data}
+library(validatoR)
+
+head(toy_validation)
+```
+
+`toy_validation` has 2,000 simulated animals: their EBVs from a partial and a
+whole evaluation, a pre-corrected phenotype simulated with a heritability of
+0.3, a cohort (`group`) and the inbreeding coefficient. The simulation fixes the
+LR statistics at exact values (level bias 0.75, dispersion bias 0.90 and rho
+0.85, the correlation between the partial and the whole EBVs). The additive
+genetic variance is 300.
+
+## The LR method
+
+`validate_lr()` takes one data frame per evaluation, with the animal ID in
+column 1 and the EBV in column 2, and matches animals by ID.
+
+```{r lr-input}
+# get the partial EBV
+partial <- toy_validation[, c("id", "partial")]
+# get the whole EBV
+whole <- toy_validation[, c("id", "whole")]
+
+res <- validate_lr(partial, whole)
+res$stats # view the statistics
+```
+
+The result is a list with `stats`, the table above, and `plot`. The rows of
+`stats` are:
+
+| Row | Meaning | Value if unbiased |
+|:----|:--------|:------------------|
+| `n` | Number of validation animals | |
+| `level_bias` | Mean of the partial EBVs minus mean of the whole EBVs | 0 |
+| `dispersion_bias` | Slope of the regression of the whole EBVs on the partial EBVs | 1. Below 1 the partial EBVs are over-dispersed relative to the whole EBVs (or the whole EBVs are under-dispersed), above 1 the reverse |
+| `rho` | Correlation between the partial and the whole EBVs, the ratio of their accuracies | Close to 1 |
+| `inc_acc` | `1 / rho`, the factor by which accuracy increases from the partial to the whole EBVs | 1 means no gain |
+
+In the example, the level bias is
+`r round(res$stats["level_bias", "value"], 2)`, the dispersion
+bias is `r round(res$stats["dispersion_bias", "value"], 2)`
+and rho is `r round(res$stats["rho", "value"], 2)`, exactly the values that were
+simulated. The partial EBVs are over-dispersed, as simulated.
+
+Legarra and Reverter (2018) suggest checking the level bias and the dispersion
+first, and comparing accuracies only for evaluations that are approximately
+unbiased, because the accuracy statistics rely on unbiasedness. In a small or
+related validation set, the dispersion bias is expected to fall below 1 even when
+the EBVs are correct (0.94 in the paper's example of 100 animals in half-sib
+families of 10), so use large validation sets, several hundred animals or more.
+
+### Accuracy of the partial EBVs
+
+With `var_a` and the inbreeding of the validation animals, `validate_lr()` adds
+`accuracy_partial`, the population accuracy of the partial EBVs (the correlation
+between true and estimated breeding values across the validation animals), and
+`level_bias_in_GSD`, the level bias in genetic standard deviations. `var_a` is the
+additive genetic variance. The inbreeding is a data frame with the ID in
+column 1 and the coefficient in column 2, or `average_F`, the average
+inbreeding, if you only have that.
+
+```{r lr-accuracy}
+# get the inbreeding coefficients
+inbreeding <- toy_validation[, c("id", "inbreeding")]
+
+res_acc <- validate_lr(partial, whole, var_a = 300, inbreeding = inbreeding)
+res_acc$stats # view the statistics
+```
+
+### Standard errors
+
+With `bootstrap = TRUE` the validation animals are resampled with replacement
+and every statistic is recomputed in each resample. The `SE` column is the
+standard deviation of each statistic across the resamples, and an approximate
+95% interval is the estimate plus or minus two standard errors. The default is
+10000 resamples; 200 keep this vignette fast.
+
+```{r lr-bootstrap}
+# make the resamples reproducible
+set.seed(1)
+res_boot <- validate_lr(
+  partial,
+  whole,
+  var_a = 300,
+  inbreeding = inbreeding,
+  bootstrap = TRUE,
+  n_boot = 200
+)
+res_boot$stats
+```
+
+### Plots
+
+`plot = TRUE` adds a scatter plot of the whole EBVs on the partial EBVs. Each
+point is an animal. The grey line has slope 1, and the blue line is the
+regression of the whole EBVs on the partial EBVs, so its slope is the
+dispersion bias.
+
+```{r lr-plot}
+res_plot <- validate_lr(partial, whole, plot = TRUE)
+res_plot$plot
+```
+
+With `var_a`, `plot_in_gsd = TRUE` draws both axes in genetic standard
+deviations, and `plot_verbose = TRUE` adds the number of animals as a subtitle
+and the main statistics as a caption.
+
+```{r lr-plot-gsd}
+res_gsd <- validate_lr(
+  partial,
+  whole,
+  var_a = 300,
+  plot = TRUE,
+  plot_in_gsd = TRUE,
+  plot_verbose = TRUE
+)
+res_gsd$plot
+```
+
+### Validation group
+
+By default, `validate_lr()` uses all animals found in both data frames. To
+validate a subset, such as the youngest animals, pass `val_group`: a data frame
+with the IDs of the validation animals in column 1 and, optionally, a group
+label in column 2. `plot_subgroups = TRUE` colours the points by that label,
+which helps to spot a group that behaves differently.
+
+```{r lr-group}
+# the validation animals: the animals of cohorts 1 and 2, labelled by cohort
+val_group <- toy_validation[
+  toy_validation$group %in% c("cohort_1", "cohort_2"),
+  c("id", "group")
+]
+
+res_group <- validate_lr(
+  partial,
+  whole,
+  val_group = val_group,
+  plot = TRUE,
+  plot_subgroups = TRUE
+)
+res_group$stats
+res_group$plot
+```
+
+## Predictions against a target
+
+`validate_prediction()` compares two numeric vectors of the same length and
+order: the first prediction belongs to the first target, and so on.
+
+```{r prediction}
+res_pred <- validate_prediction(
+  prediction = toy_validation$partial,
+  target = toy_validation$pheno,
+  h2 = 0.3
+)
+res_pred$stats
+```
+
+| Row | Meaning |
+|:----|:--------|
+| `n` | Number of pairs |
+| `correlation` | Correlation between prediction and target |
+| `slope` | Slope of the regression of the target on the prediction. 1 means no dispersion bias |
+| `intercept` | Intercept of that regression |
+| `mean_diff` | Mean prediction minus mean target, the level bias |
+| `mse`, `rmse` | Mean squared error and its square root, from `prediction - target` |
+| `accuracy` | Correlation divided by `sqrt(h2)`, only when `h2` is provided |
+
+The accuracy is valid when the target is a pre-corrected phenotype that was not
+used in the evaluation that produced the predictions. Here it is
+`r round(res_pred$stats["accuracy", "value"], 2)`, against about 0.52 simulated.
+`h2` should be the heritability of the validation population. After selection it
+is lower than in the base population, and the base-population value then
+underestimates the accuracy. Estimates from phenotypes, including the slope, are
+also sensitive to errors in the heritability and in the pre-correction for fixed
+effects (Legarra and Reverter, 2018).
+
+`mse` and `rmse` are only meaningful when prediction and target are on the same
+scale, for example a partial and a whole EBV, or EBVs and true breeding values.
+With `var_a`, `rmse_in_GSD` gives the RMSE in genetic standard deviations. This
+function also takes `bootstrap = TRUE` and `plot = TRUE`, which draws the target
+against the prediction:
+
+```{r prediction-rmse}
+res_rmse <- validate_prediction(
+  prediction = toy_validation$partial,
+  target = toy_validation$whole,
+  var_a = 300,
+  plot = TRUE
+)
+res_rmse$stats
+res_rmse$plot
+```
+
+## Rebasing EBVs
+
+`rebase_ebv()` subtracts the mean EBV of a base population from the EBVs of all
+animals, so that the base population has a mean of 0 in each EBV column. Use it
+when two evaluations define their bases differently. The level bias between a
+partial and a whole evaluation is one of the quantities the LR method
+estimates, so the base population must lie outside the validation animals;
+otherwise rebasing removes part of that bias. `rebase_ebv()` takes two data
+frames. The first has the ID in column 1 and one column of EBVs per trait or
+evaluation, and the second has the IDs of the base population.
+
+```{r rebase}
+# the EBVs to rebase
+ebv <- toy_validation[, c("id", "partial", "whole")]
+# the IDs of the base population
+base_pop <- toy_validation[toy_validation$group == "cohort_1", "id", drop = FALSE]
+
+rebased <- rebase_ebv(ebv, base_pop = base_pop)
+head(rebased$rebased_ebv)
+```
+
+Cohort 1 only illustrates the call. In a real validation, the base population is
+a group outside the validation animals, for example older animals. The result is
+a list, and the data frame is `rebased$rebased_ebv`. Every animal in a column
+moves by the same amount, so differences between animals do not change.
+
+If you already know the values to subtract, use `constant_value` instead of
+`base_pop`, with one number per EBV column, in the order of the columns. Here
+100 is subtracted from `partial` and 90 from `whole`. With `plot = TRUE`, the
+result also has `plots`, a named list with one plot per EBV column, named after
+the columns of your data. So here the plot of the column called `partial` is
+`plots$partial`, and with your own data the names follow your own columns. Each
+plot shows the rebased EBVs against the original ones: the points stay on a line
+of slope 1, shifted by the value subtracted.
+
+```{r rebase-constant}
+rebased_constant <- rebase_ebv(ebv, constant_value = c(100, 90), plot = TRUE)
+head(rebased_constant$rebased_ebv, 3)
+# the plot of the column called "partial"
+rebased_constant$plots$partial
+```
+
+## Messages and errors
+
+The functions stop with a message when an input cannot be used. `validate_lr()`
+leaves out animals found in only one of the two evaluations and reports how
+many:
+
+```{r message-example}
+res_left_out <- validate_lr(partial[1:1990, ], whole)
+```
+
+## Further reading
+
+Each function has a help page that describes every argument: `?validate_lr`,
+`?validate_prediction` and `?rebase_ebv`.
+
+The LR method is described in Legarra, A. and Reverter, A. (2018). Semi-parametric
+estimates of population accuracy and bias of predictions of breeding values and
+future phenotypes using the LR method. *Genetics Selection Evolution* 50:53.
+<https://doi.org/10.1186/s12711-018-0426-6>
