@@ -208,7 +208,7 @@ res_pred$stats
 
 The accuracy is valid when the target is a pre-corrected phenotype that was not
 used in the evaluation that produced the predictions. Here it is
-`r round(res_pred$stats["accuracy", "value"], 2)`, against about 0.52 simulated.
+`r round(res_pred$stats["accuracy", "value"], 2)`, the value that was simulated.
 `h2` should be the heritability of the validation population. After selection it
 is lower than in the base population, and the base-population value then
 underestimates the accuracy. Estimates from phenotypes, including the slope, are

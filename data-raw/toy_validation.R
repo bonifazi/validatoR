@@ -9,14 +9,17 @@
 # which is exactly the slope of the regression of WHOLE on PARTIAL.
 # So by generating:
 #   whole = intercept + slope * partial + noise
-# the dataset has known target statistics (dispersion bias equals `slope` in expectation,
-# level bias = intercept, and correlation is also known), which can be used in tests.
+# the dataset has known target statistics (dispersion bias equals `slope`,
+# level bias = intercept, and the correlation is also known), which can be used in
+# tests. They are exact, because the sample moments of `partial` and of the noise
+# are set exactly below.
 #
 # `pheno` is a pre-corrected phenotype built on top of `whole` (see the section
 # "Pre-corrected phenotype" below) so that, with `h2` known, the accuracy
 # estimated by validate_prediction(partial, pheno, h2 = h2) has a known value.
-# Its random draws come AFTER all the others, so adding it did not change the
-# values of the other columns.
+# As for `whole`, the random parts of `pheno` are set to exact moments, so this
+# value is exact too. Its random draws come AFTER all the others, so adding it
+# did not change the values of the other columns.
 # ---------------------------------------------------------------------------
 
 set.seed(123)
@@ -45,8 +48,19 @@ a  <- -target_level_bias
 sd_e <- sqrt(b^2 * sd_partial^2 * (1 / target_rho^2 - 1))
 
 ## ---- Simulate -------------------------------------------------------------
-partial <- rnorm(n, mean = 0, sd = sd_partial) # draw the partial EBV vector
-whole   <- a + b * partial + rnorm(n, mean = 0, sd = sd_e) # simultae the whole EBV vector from partial and noise
+# draw partial and the noise of whole
+partial <- rnorm(n, mean = 0, sd = sd_partial)
+e <- rnorm(n, mean = 0, sd = sd_e)
+
+# force partial to have mean 0 and sd exactly sd_partial
+partial <- as.numeric(scale(partial)) * sd_partial
+
+# force the noise to have mean 0, sd exactly sd_e and no correlation with partial
+e <- stats::resid(stats::lm(e ~ partial))
+e <- as.numeric(scale(e)) * sd_e
+
+# build whole from partial and the noise
+whole <- a + b * partial + e
 
 # group factor: simulate 4 cohorts (e.g. birth-year batches) for group-wise validation
 group <- factor(sample(paste0("cohort_", 1:4), n, replace = TRUE))
@@ -56,12 +70,13 @@ F_coef <- pmax(0, rnorm(n, mean = mean_inb, sd = 0.01))
 
 ## ---- Pre-corrected phenotype ---------------------------------------------
 # Build a true breeding value (tbv) around `whole`, and a phenotype around tbv:
-#   tbv   = whole + u,   u is independent of `whole` and `partial`
+#   tbv   = whole + u,   u is uncorrelated with `whole` and `partial`
 #           -> cov(whole, tbv) = var(whole), i.e. `whole` is an unbiased EBV of tbv
 #           -> var(tbv) = var_a, so var(u) = var_a - var(whole)
-#   pheno = tbv + e,     e independent error added, var(e) = var_a * (1 - h2) / h2
+#   pheno = tbv + e,     e uncorrelated error added, var(e) = var_a * (1 - h2) / h2
 #           -> var(tbv) / var(pheno) = var_a / var(pheno) = h2
-# Consequences (in expectation), step by step:
+# "Uncorrelated" is exact here (see the code below), so the consequences are
+# exact too, step by step:
 #
 # 1) cov(partial, pheno) = cov(partial, whole) = dispersion * var(partial)
 #    
@@ -97,12 +112,28 @@ F_coef <- pmax(0, rnorm(n, mean = mean_inb, sd = 0.01))
 #    cor(partial, tbv) = 90 / (10 * 17.3) = 0.52.
 #    It is the accuracy that validate_prediction() should recover when it is
 #    given h2.
-var_whole  <- b^2 * sd_partial^2 + sd_e^2   # expected variance of `whole`
+var_whole  <- b^2 * sd_partial^2 + sd_e^2   # variance of `whole` (exact)
 stopifnot(var_a > var_whole)                # otherwise var(u) would be negative
 sd_u       <- sqrt(var_a - var_whole)
 sd_e_pheno <- sqrt(var_a * (1 - h2) / h2)
-tbv        <- whole + rnorm(n, mean = 0, sd = sd_u)        # not stored
-pheno      <- tbv + rnorm(n, mean = 0, sd = sd_e_pheno)
+
+# draw u and the error of pheno
+u       <- rnorm(n, mean = 0, sd = sd_u)
+e_pheno <- rnorm(n, mean = 0, sd = sd_e_pheno)
+
+# u: no correlation with partial and with the noise of whole (so with whole),
+# mean 0 and sd exactly sd_u
+u <- as.numeric(scale(stats::resid(stats::lm(u ~ partial + e)))) * sd_u
+
+# e_pheno: no correlation with partial, the noise of whole and u,
+# mean 0 and sd exactly sd_e_pheno
+e_pheno <- as.numeric(scale(
+  stats::resid(stats::lm(e_pheno ~ partial + e + u))
+)) * sd_e_pheno
+
+# build the true breeding value and the phenotype
+tbv   <- whole + u        # not stored
+pheno <- tbv + e_pheno
 
 toy_validation <- data.frame(
   id      = seq_len(n),
@@ -123,16 +154,23 @@ realised <- c(
                        ((1 - mean(toy_validation$inbreeding)) * var_a))
 )
 print(round(realised, 4))
-# Targets: level_bias 0.75, dispersion 0.90, rho 0.85 (sampling noise aside).
+# Targets: level_bias 0.75, dispersion 0.90, rho 0.85. They are exact, because
+# the sample moments of partial and the noise are forced above.
 # var_a above is the value to pass to the var_a argument in examples/tests.
+# accuracy_p (0.562 with var_a = 300 and the inbreeding column) is the LR accuracy,
+# sqrt(cov(partial, whole) / ((1 - mean F) * var_a)). It is higher than the
+# correlation between partial and the true breeding value (0.52, see below),
+# because partial is over-dispersed by construction (dispersion 0.90) and the LR
+# accuracy assumes no over-dispersion.
 
 realised_pheno <- c(
   cor_partial_pheno = cor(toy_validation$partial, toy_validation$pheno),
   cor_partial_pheno_scaled = cor(toy_validation$partial, toy_validation$pheno) / sqrt(h2)
 )
 print(round(realised_pheno, 4))
-# Targets: cor_partial_pheno = b * sd_partial / sqrt(var_a / h2) = 0.285,
-#          accuracy_via_h2   = b * sd_partial / sqrt(var_a)      = 0.520
-# (sampling SE of about 0.02 and 0.04). Pass h2 = 0.3 to validate_prediction().
+# Targets: cor_partial_pheno = b * sd_partial / sqrt(var_a / h2) = 0.2846,
+#          accuracy_via_h2   = b * sd_partial / sqrt(var_a)      = 0.5196
+# They are exact too, because u and e_pheno are set exactly above.
+# Pass h2 = 0.3 to validate_prediction().
 
 usethis::use_data(toy_validation, overwrite = TRUE)

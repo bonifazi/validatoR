@@ -1,8 +1,7 @@
 # Tests for validate_prediction(). The tests are grouped in blocks, each with a
-# short description. Two kinds of checks:
-# - exact: values that must equal a direct formula or a hand-calculated result
-# - against the known targets of `toy_validation` (see data-raw/toy_validation.R),
-#   with tolerances that reflect the sampling error of the 2000 toy animals
+# short description. The checks are exact: values that must equal a direct
+# formula, a hand-calculated result or an exact target of `toy_validation` (see
+# data-raw/toy_validation.R)
 
 # ----------------------------------------------------------------------------
 # Block 1. The statistics are right
@@ -123,29 +122,35 @@ test_that("n is the number of pairs used", {
 
 # ----------------------------------------------------------------------------
 # Block 2. Known targets of the toy data
-# Tests: The values the dataset was simulated to have, within sampling noise.
+# Tests: The exact values the dataset was simulated to have, for partial vs whole
+# and for partial vs pheno.
 # ----------------------------------------------------------------------------
 
-test_that("partial vs whole recovers the simulated LR targets", {
+test_that("partial vs whole gives the exact simulated targets", {
   res <- validate_prediction(toy_validation$partial, toy_validation$whole)$stats
 
   # targets: rho 0.85, dispersion 0.90, level bias 0.75 (intercept -0.75)
-  expect_lt(abs(res["correlation", "value"] - 0.85), 0.05)
-  expect_lt(abs(res["slope", "value"] - 0.90), 0.05)
-  expect_lt(abs(res["mean_diff", "value"] - 0.75), 0.4)
-  expect_lt(abs(res["intercept", "value"] + 0.75), 0.4)
+  expect_equal(res["correlation", "value"], 0.85)
+  expect_equal(res["slope", "value"], 0.90)
+  expect_equal(res["mean_diff", "value"], 0.75)
+  expect_equal(res["intercept", "value"], -0.75)
 })
 
-test_that("partial vs pheno recovers the known accuracy when h2 is given", {
+test_that("partial vs pheno gives the exact known accuracy when h2 is given", {
   res <- validate_prediction(
     toy_validation$partial,
     toy_validation$pheno,
     h2 = 0.3
   )$stats
 
-  # cor(partial, pheno) = 0.285 and accuracy = cor(partial, tbv) = 0.52
-  expect_lt(abs(res["correlation", "value"] - 0.285), 0.05)
-  expect_lt(abs(res["accuracy", "value"] - 0.52), 0.1)
+  # cor(partial, pheno) = 0.90 * 10 / sqrt(300 / 0.3) and
+  # accuracy = cor(partial, tbv) = 0.90 * 10 / sqrt(300)
+  expect_equal(res["correlation", "value"], 9 / sqrt(1000))
+  expect_equal(res["accuracy", "value"], 9 / sqrt(300))
+  # pheno has the same slope and mean as whole
+  expect_equal(res["slope", "value"], 0.90)
+  expect_equal(res["mean_diff", "value"], 0.75)
+  expect_equal(res["intercept", "value"], -0.75)
 })
 
 # ----------------------------------------------------------------------------

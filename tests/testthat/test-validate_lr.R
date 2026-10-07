@@ -6,11 +6,11 @@ whole_all <- toy_validation[, c("id", "whole")]
 
 # ----------------------------------------------------------------------------
 # Block 1. The statistics are right
-# Tests: The numbers match the direct formulas and the dataset targets, the internal
-# function agrees with validate_lr(), and a tiny average inbreeding is kept.
+# Tests: The numbers match the direct formulas and the exact dataset targets, the
+# internal function agrees with validate_lr(), and a tiny average inbreeding is kept.
 # ----------------------------------------------------------------------------
 
-test_that("the statistics match the direct formulas and the dataset targets", {
+test_that("the statistics match the direct formulas and the exact targets", {
   p <- toy_validation$partial
   w <- toy_validation$whole
   res <- validate_lr(
@@ -35,10 +35,12 @@ test_that("the statistics match the direct formulas and the dataset targets", {
     sqrt(cov(p, w) / ((1 - mean(toy_validation$inbreeding)) * 300))
   )
 
-  # the dataset targets (0.75, 0.90, 0.85), within sampling noise
-  expect_equal(stats["level_bias", "value"], 0.75, tolerance = 0.3)
-  expect_equal(stats["dispersion_bias", "value"], 0.90, tolerance = 0.05)
-  expect_equal(stats["rho", "value"], 0.85, tolerance = 0.05)
+  # the dataset targets are exact (see data-raw/toy_validation.R)
+  expect_equal(stats["level_bias", "value"], 0.75)
+  expect_equal(stats["dispersion_bias", "value"], 0.90)
+  expect_equal(stats["rho", "value"], 0.85)
+  expect_equal(stats["inc_acc", "value"], 1 / 0.85)
+  expect_equal(stats["level_bias_in_GSD", "value"], 0.75 / sqrt(300))
 })
 
 test_that(".lr_stats() on all rows gives the numbers of validate_lr()", {

@@ -28,10 +28,13 @@ test_that("the stored values keep their full precision", {
 
   expect_equal(stats["rho", "value"], cor(x, y))
   expect_equal(stats["dispersion_bias", "value"], cov(x, y) / var(x))
-  # more digits than the printed table shows
+  # level bias in genetic standard deviations has more digits than the printed
+  # table shows (rho and the dispersion are round numbers in toy_validation)
+  in_gsd <- (mean(x) - mean(y)) / sqrt(300)
+  expect_equal(stats["level_bias_in_GSD", "value"], in_gsd)
   expect_false(isTRUE(all.equal(
-    stats["rho", "value"],
-    signif(cor(x, y), 4),
+    stats["level_bias_in_GSD", "value"],
+    signif(in_gsd, 4),
     tolerance = 1e-12
   )))
 })

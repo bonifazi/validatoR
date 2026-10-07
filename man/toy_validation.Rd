@@ -7,7 +7,7 @@
 \format{
 \subsection{\code{toy_validation}}{
 
-A data frame with 2000 rows and 6 columns:
+A data frame with 2,000 rows and 6 columns:
 \describe{
 \item{id}{Animal ID.}
 \item{partial}{EBV from the partial evaluation, in trait units.}
@@ -28,19 +28,21 @@ toy_validation
 }
 \description{
 Simulated EBVs from a "partial" and a "whole" evaluation, and a
-pre-corrected phenotype, built so that the statistics have known expected
-values.
+pre-corrected phenotype, built so that the LR statistics have known values.
 }
 \details{
-\code{whole} is simulated from \code{partial}, so the expected LR
-statistics are: level bias 0.75, dispersion 0.90 and rho 0.85. Sampling
-noise moves the realised values slightly. Use \code{var_a = 300} when the
-accuracy of the partial EBV is needed.
+\code{whole} is simulated from \code{partial}, and the sample moments of
+\code{partial} and of the noise of \code{whole} are set exactly, so the LR statistics
+have exactly these values: level bias 0.75, dispersion 0.90 and rho 0.85
+(\code{inc_acc} is \code{1 / 0.85}). With \code{var_a = 300} and the \code{inbreeding} column,
+\code{accuracy_partial} is 0.562.
 
 \code{pheno} is a true breeding value (\code{whole} plus an independent part, with
-variance \code{var_a}) plus noise, so that its heritability is 0.3. Because
-of that, \code{validate_prediction(partial, pheno, h2 = 0.3)} returns an
-accuracy of about 0.52 (the correlation between \code{partial} and the true
-breeding value), with a sampling error of about 0.04.
+variance \code{var_a}) plus noise, so that its heritability is 0.3. Its random
+parts are also set exactly, so \code{validate_prediction(partial, pheno, h2 = 0.3)} returns a correlation of 0.285 and an accuracy of 0.520 (the
+correlation between \code{partial} and the true breeding value), and a slope of
+0.90 and a mean difference of 0.75, as for \code{whole}. The accuracy is lower
+than \code{accuracy_partial} because \code{partial} is over-dispersed by construction
+(dispersion 0.90), while the LR accuracy assumes no over-dispersion.
 }
 \keyword{datasets}

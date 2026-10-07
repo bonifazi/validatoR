@@ -91,7 +91,7 @@
 #' @export
 #' @examples
 #' # `pheno` is a pre-corrected phenotype simulated with h2 = 0.3, so passing
-#' # `h2` gives the accuracy of the partial EBVs (about 0.5 for this toy data)
+#' # `h2` gives the accuracy of the partial EBVs (0.52 for this toy data)
 #' res <- validate_prediction(
 #'   toy_validation$partial,
 #'   toy_validation$pheno,
