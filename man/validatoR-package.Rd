@@ -17,7 +17,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Renzo Bonifazi \email{renzo.bonifazi@wur.nl} (\href{https://orcid.org/0000-0002-1794-4708}{ORCID})
+\strong{Maintainer}: Renzo Bonifazi \email{renzo.bonifazi@outlook.it} (\href{https://orcid.org/0000-0002-1794-4708}{ORCID})
 
 }
 \keyword{internal}
