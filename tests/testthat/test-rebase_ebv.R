@@ -108,7 +108,7 @@ test_that("exactly one of base_pop and constant_value must be provided", {
   )
   expect_error(
     rebase_ebv(ebv, base_pop = base_df, constant_value = 1),
-    "Provide either `base_pop` or `constant_value`, not both.",
+    "`base_pop` and `constant_value` must not both be provided.",
     fixed = TRUE
   )
 })
@@ -128,12 +128,12 @@ test_that("constant_value must have exactly one number per EBV column", {
   # ebv has 2 EBV columns: a single number is not repeated for both
   expect_error(
     rebase_ebv(ebv, constant_value = 1),
-    "one number per EBV column (2), but 1 were provided.",
+    "one number per EBV column (2), but it has 1.",
     fixed = TRUE
   )
   expect_error(
     rebase_ebv(ebv, constant_value = c(1, 2, 3)),
-    "one number per EBV column (2), but 3 were provided.",
+    "one number per EBV column (2), but it has 3.",
     fixed = TRUE
   )
   expect_no_error(rebase_ebv(ebv, constant_value = c(1, 2)))
@@ -142,7 +142,7 @@ test_that("constant_value must have exactly one number per EBV column", {
   four_cols <- cbind(ebv, extra_1 = ebv$partial, extra_2 = ebv$whole)
   expect_error(
     rebase_ebv(four_cols, constant_value = c(1, 2)),
-    "one number per EBV column (4), but 2 were provided.",
+    "one number per EBV column (4), but it has 2.",
     fixed = TRUE
   )
   expect_no_error(rebase_ebv(four_cols, constant_value = c(1, 2, 3, 4)))
@@ -151,7 +151,7 @@ test_that("constant_value must have exactly one number per EBV column", {
   one_col <- ebv[, c("id", "partial")]
   expect_error(
     rebase_ebv(one_col, constant_value = c(1, 2)),
-    "one number per EBV column (1), but 2 were provided.",
+    "one number per EBV column (1), but it has 2.",
     fixed = TRUE
   )
 })

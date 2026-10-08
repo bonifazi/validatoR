@@ -110,7 +110,7 @@ rebase_ebv <- function(
   }
   if (!is.null(base_pop) && !is.null(constant_value)) {
     stop(
-      "Provide either `base_pop` or `constant_value`, not both.",
+      "`base_pop` and `constant_value` must not both be provided.",
       call. = FALSE
     )
   }
@@ -143,7 +143,7 @@ rebase_ebv <- function(
   not_numeric <- ebv_cols[!vapply(data[-1], is.numeric, logical(1))]
   if (length(not_numeric) > 0L) {
     stop(
-      "Columns 2 onward of `data` must be numeric; not numeric: ",
+      "`data` must have numeric EBVs in columns 2 onward; not numeric: ",
       paste(not_numeric, collapse = ", "),
       ".",
       call. = FALSE
@@ -178,9 +178,9 @@ rebase_ebv <- function(
     stop(
       "`constant_value` must have one number per EBV column (",
       length(ebv_cols),
-      "), but ",
+      "), but it has ",
       length(constant_value),
-      " were provided.",
+      ".",
       call. = FALSE
     )
   }

@@ -180,7 +180,7 @@ validate_lr <- function(
     # check that plot_in_gsd = TRUE comes with var_a
     if (isTRUE(plot_in_gsd) && is.null(var_a)) {
         stop(
-            "`plot_in_gsd = TRUE` needs `var_a`, the additive genetic variance.",
+            "`var_a` must be provided when `plot_in_gsd = TRUE`.",
             call. = FALSE
         )
     }
@@ -198,16 +198,16 @@ validate_lr <- function(
     # check that either average_F or inbreeding is provided, not both
     if (!is.null(average_F) && !is.null(inbreeding)) {
         stop(
-            "Provide either `average_F` or `inbreeding`, not both.",
+            "`average_F` and `inbreeding` must not both be provided.",
             call. = FALSE
         )
     }
     # check that inbreeding is provided with bootstrap = TRUE instead of average_F
     if (isTRUE(bootstrap) && !is.null(average_F)) {
         stop(
-            "With `bootstrap = TRUE`, provide `inbreeding` (one value per animal) ",
-            "instead of `average_F`, so that the average inbreeding is ",
-            "recomputed in every resample.",
+            "`inbreeding` (one value per animal) must be provided instead of ",
+            "`average_F` when `bootstrap = TRUE`, so that the average ",
+            "inbreeding is recomputed in every resample.",
             call. = FALSE
         )
     }
@@ -236,7 +236,7 @@ validate_lr <- function(
         # count the animals left out of each evaluation
         n_only_partial <- nrow(p_df) - nrow(data)
         n_only_whole <- nrow(w_df) - nrow(data)
-        # warn that some animals were left out in either partial or whole
+        # report the animals left out of either partial or whole
         if (n_only_partial > 0L) {
             message(
                 n_only_partial,
@@ -289,8 +289,8 @@ validate_lr <- function(
         isTRUE(plot_subgroups) && (is.null(val_group) || ncol(val_group) < 2L)
     ) {
         stop(
-            "`plot_subgroups = TRUE` needs a group label in column 2 of ",
-            "`val_group`.",
+            "`val_group` must have a group label in column 2 when ",
+            "`plot_subgroups = TRUE`.",
             call. = FALSE
         )
     }
@@ -315,7 +315,7 @@ validate_lr <- function(
         data <- merge(data, inb_df, by = "id")
         if (anyNA(data$inbreeding) || any(data$inbreeding < 0)) {
             stop(
-                "Inbreeding coefficients of the validation animals must be ",
+                "`inbreeding` values of the validation animals must be ",
                 "at least 0 and not missing.",
                 call. = FALSE
             )
@@ -451,11 +451,16 @@ validate_lr <- function(
     x <- as.data.frame(x) # data.table / tibble: x[[i]] then returns a vector
     # check for an ID column and a value column
     if (ncol(x) < 2L) {
-        stop("`", arg, "` needs at least 2 columns (ID, value).", call. = FALSE)
+        stop(
+            "`",
+            arg,
+            "` must have at least 2 columns (ID, value).",
+            call. = FALSE
+        )
     }
     # check that the values are numeric
     if (!is.numeric(x[[2]])) {
-        stop("Column 2 of `", arg, "` must be numeric.", call. = FALSE)
+        stop("`", arg, "` must have numeric values in column 2.", call. = FALSE)
     }
     # IDs as text (numeric and text IDs match), stopping when missing or duplicated
     ids <- .as_checked_ids(x[[1]], arg)

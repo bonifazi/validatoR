@@ -146,7 +146,11 @@ validate_prediction <- function(
   # check for h2 being a single number in (0, 1]
   if (
     !is.null(h2) &&
-      !(is.numeric(h2) && length(h2) == 1L && h2 > 0 && h2 <= 1)
+      !(is.numeric(h2) &&
+        length(h2) == 1L &&
+        !is.na(h2) &&
+        h2 > 0 &&
+        h2 <= 1)
   ) {
     stop("`h2` must be a single number in (0, 1].", call. = FALSE)
   }

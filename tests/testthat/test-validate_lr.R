@@ -204,8 +204,68 @@ test_that("accuracy is NaN with a warning when the average inbreeding is 1 or mo
 
 # ----------------------------------------------------------------------------
 # Block 4. Invalid input gives clear errors
-# Tests: Missing, constant or too few EBVs, and bootstrap with average_F.
+# Tests: Unusable partial, whole and val_group inputs, no shared animals, the
+# flags and numbers, the average_F and inbreeding arguments, missing, constant or
+# too few EBVs, and bootstrap with average_F.
 # ----------------------------------------------------------------------------
+
+test_that("partial and whole must be data frames with IDs and numeric EBVs", {
+  # not a data frame
+  expect_error(
+    validate_lr(partial_all$partial, whole_all),
+    "`partial` must be a data frame",
+    fixed = TRUE
+  )
+  expect_error(
+    validate_lr(partial_all, "whole"),
+    "`whole` must be a data frame",
+    fixed = TRUE
+  )
+
+  # fewer than 2 columns
+  expect_error(
+    validate_lr(partial_all["id"], whole_all),
+    "`partial` must have at least 2 columns (ID, value).",
+    fixed = TRUE
+  )
+
+  # EBVs that are not numbers
+  partial_text <- partial_all
+  partial_text$partial <- as.character(partial_text$partial)
+  expect_error(
+    validate_lr(partial_text, whole_all),
+    "`partial` must have numeric values in column 2.",
+    fixed = TRUE
+  )
+})
+
+test_that("missing or duplicated IDs are errors", {
+  partial_na_id <- partial_all
+  partial_na_id$id[1] <- NA
+  expect_error(
+    validate_lr(partial_na_id, whole_all),
+    "`partial` has missing IDs.",
+    fixed = TRUE
+  )
+
+  whole_dup <- whole_all
+  whole_dup$id[2] <- whole_dup$id[1]
+  expect_error(
+    validate_lr(partial_all, whole_dup),
+    "`whole` has duplicated IDs",
+    fixed = TRUE
+  )
+})
+
+test_that("partial and whole without a shared animal are an error", {
+  whole_other <- whole_all
+  whole_other$id <- paste0("other_", whole_other$id)
+  expect_error(
+    validate_lr(partial_all, whole_other),
+    "have no animal IDs in common",
+    fixed = TRUE
+  )
+})
 
 test_that("missing, constant and too few validation animals are errors", {
   # missing EBVs, counted per vector
@@ -240,7 +300,137 @@ test_that("missing, constant and too few validation animals are errors", {
 test_that("bootstrap = TRUE with average_F is an error", {
   expect_error(
     validate_lr(partial_all, whole_all, var_a = 300, average_F = 0.05, bootstrap = TRUE),
-    "With `bootstrap = TRUE`, provide `inbreeding`",
+    "`inbreeding` (one value per animal) must be provided instead of `average_F`",
+    fixed = TRUE
+  )
+})
+
+test_that("val_group must be a data frame with unique, present IDs", {
+  ids <- toy_validation$id
+
+  # not a data frame
+  expect_error(
+    validate_lr(partial_all, whole_all, val_group = ids[1:300]),
+    "`val_group` must be a data frame",
+    fixed = TRUE
+  )
+
+  # duplicated or missing IDs
+  vg_dup <- data.frame(id = c(ids[1:5], ids[1]))
+  expect_error(
+    validate_lr(partial_all, whole_all, val_group = vg_dup),
+    "`val_group` IDs must be unique and not missing.",
+    fixed = TRUE
+  )
+  vg_na <- data.frame(id = c(ids[1:5], NA))
+  expect_error(
+    validate_lr(partial_all, whole_all, val_group = vg_na),
+    "`val_group` IDs must be unique and not missing.",
+    fixed = TRUE
+  )
+})
+
+test_that("plot_subgroups needs a group label in column 2 of val_group", {
+  msg <- "`val_group` must have a group label in column 2 when `plot_subgroups = TRUE`."
+
+  # no val_group at all
+  expect_error(
+    validate_lr(partial_all, whole_all, plot_subgroups = TRUE),
+    msg,
+    fixed = TRUE
+  )
+
+  # a val_group with the IDs only
+  vg_ids <- data.frame(id = toy_validation$id[1:300])
+  expect_error(
+    validate_lr(partial_all, whole_all, val_group = vg_ids, plot_subgroups = TRUE),
+    msg,
+    fixed = TRUE
+  )
+})
+
+test_that("average_F must be a single number in [0, 1), and not with inbreeding", {
+  msg <- "`average_F` must be a single number in [0, 1)."
+  expect_error(validate_lr(partial_all, whole_all, average_F = 1), msg, fixed = TRUE)
+  expect_error(validate_lr(partial_all, whole_all, average_F = -0.1), msg, fixed = TRUE)
+  expect_error(validate_lr(partial_all, whole_all, average_F = NA_real_), msg, fixed = TRUE)
+  expect_error(
+    validate_lr(partial_all, whole_all, average_F = c(0.1, 0.2)),
+    msg,
+    fixed = TRUE
+  )
+
+  # average_F and inbreeding are alternatives
+  expect_error(
+    validate_lr(
+      partial_all,
+      whole_all,
+      var_a = 300,
+      average_F = 0.05,
+      inbreeding = toy_validation[, c("id", "inbreeding")]
+    ),
+    "`average_F` and `inbreeding` must not both be provided.",
+    fixed = TRUE
+  )
+})
+
+test_that("inbreeding must be a data frame covering every validation animal", {
+  inb <- toy_validation[, c("id", "inbreeding")]
+
+  # not a data frame
+  expect_error(
+    validate_lr(partial_all, whole_all, var_a = 300, inbreeding = inb$inbreeding),
+    "`inbreeding` must be a data frame",
+    fixed = TRUE
+  )
+
+  # an animal without a coefficient
+  expect_error(
+    validate_lr(partial_all, whole_all, var_a = 300, inbreeding = inb[-1, ]),
+    "1 validation animal(s) are missing from `inbreeding`",
+    fixed = TRUE
+  )
+})
+
+test_that("flags and numbers are checked in validate_lr()", {
+  # every flag must be a single TRUE or FALSE
+  flags <- c(
+    "plot",
+    "plot_verbose",
+    "plot_subgroups",
+    "plot_in_gsd",
+    "bootstrap",
+    "verbose"
+  )
+  for (flag in flags) {
+    args <- list(partial_all, whole_all)
+    args[[flag]] <- NA
+    expect_error(
+      do.call(validate_lr, args),
+      paste0("`", flag, "` must be TRUE or FALSE."),
+      fixed = TRUE
+    )
+  }
+
+  # the numbers
+  expect_error(
+    validate_lr(partial_all, whole_all, n_boot = 1),
+    "`n_boot` must be a single whole number of at least 2.",
+    fixed = TRUE
+  )
+  expect_error(
+    validate_lr(partial_all, whole_all, ncpus = 0),
+    "`ncpus` must be a single whole number of at least 1.",
+    fixed = TRUE
+  )
+  expect_error(
+    validate_lr(partial_all, whole_all, var_a = -1),
+    "`var_a` must be a single positive number.",
+    fixed = TRUE
+  )
+  expect_error(
+    validate_lr(partial_all, whole_all, var_a = "300"),
+    "`var_a` must be a single positive number.",
     fixed = TRUE
   )
 })
@@ -304,7 +494,7 @@ test_that("group labels follow the animals, whatever the order of val_group", {
 test_that("plot_in_gsd needs var_a and only changes the plot", {
   expect_error(
     validate_lr(partial_all, whole_all, plot = TRUE, plot_in_gsd = TRUE),
-    "`plot_in_gsd = TRUE` needs `var_a`",
+    "`var_a` must be provided when `plot_in_gsd = TRUE`",
     fixed = TRUE
   )
 

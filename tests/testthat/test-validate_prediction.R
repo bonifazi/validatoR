@@ -65,7 +65,7 @@ test_that("mse and rmse match the direct formulas and their identities", {
   )
 })
 
-test_that("rmse_in_GSD is only returned when var_a is given", {
+test_that("rmse_in_GSD is only returned when var_a is provided", {
   x <- toy_validation$partial
   y <- toy_validation$whole
 
@@ -75,7 +75,7 @@ test_that("rmse_in_GSD is only returned when var_a is given", {
   expect_equal(res["rmse_in_GSD", "value"], res["rmse", "value"] / sqrt(300))
 })
 
-test_that("accuracy is only returned when h2 is given", {
+test_that("accuracy is only returned when h2 is provided", {
   x <- toy_validation$partial
   y <- toy_validation$pheno
 
@@ -136,7 +136,7 @@ test_that("partial vs whole gives the exact simulated targets", {
   expect_equal(res["intercept", "value"], -0.75)
 })
 
-test_that("partial vs pheno gives the exact known accuracy when h2 is given", {
+test_that("partial vs pheno gives the exact known accuracy when h2 is provided", {
   res <- validate_prediction(
     toy_validation$partial,
     toy_validation$pheno,
@@ -263,6 +263,17 @@ test_that("h2 must be a single number in (0, 1]", {
   expect_error(validate_prediction(x, y, h2 = 1.5), "h2")
   expect_error(validate_prediction(x, y, h2 = c(0.2, 0.3)), "h2")
   expect_error(validate_prediction(x, y, h2 = "0.3"), "h2")
+  # a missing h2 must give this message, not R's "missing value" error
+  expect_error(
+    validate_prediction(x, y, h2 = NA_real_),
+    "`h2` must be a single number in (0, 1].",
+    fixed = TRUE
+  )
+  expect_error(
+    validate_prediction(x, y, h2 = NaN),
+    "`h2` must be a single number in (0, 1].",
+    fixed = TRUE
+  )
   expect_no_error(validate_prediction(x, y, h2 = 1))
 })
 
