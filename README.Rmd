@@ -24,12 +24,26 @@ knitr::opts_chunk$set(
 > and results can change between versions, so try it out, but do not build
 > anything critical on it yet. Feedback and suggestions are very welcome, see [Feedback](#feedback).
 
-validatoR validates (genomic) predictions in animal breeding. Give it
-the EBVs of a "partial" and a "whole" evaluation, or any predictions and a
+validatoR is a standardized, open-source R package to validate (genomic)
+predictions in animal breeding. Give it the EBVs of a "partial" and a "whole" evaluation, or any predictions and a
 target to validate them with, and it will return the bias, the dispersion, the
 correlation and the accuracy, with bootstrap standard errors and a plot if you
 want them.
 
+## Why validatoR?
+
+New genomic models, genotypes, omics data and traits all need large
+investments, and validation is how you show that they pay off. In practice,
+validation is often simplified or skipped: it takes time, it is easy to get
+wrong, and everyone does it a little differently, so results from different
+analyses can't be compared and the benefit is hard to justify.
+
+validatoR is a standardized, open-source package for this step. The formulas are
+implemented once and documented, the functions check their inputs (mismatched
+IDs, missing values, duplicates, impossible values) and stop with a clear
+message instead of returning a wrong number, and the results are tested against
+data with known answers. So you know how each statistic is computed, and you can
+compare results across different analyses, species and traits, and studies.
 ## What do you want to do?
 
 | You have | Use |
@@ -53,6 +67,33 @@ or, with the `remotes` package, building the vignette as well:
 # install.packages("remotes")
 remotes::install_github("bonifazi/validatoR", build_vignettes = TRUE)
 ```
+
+<details>
+<summary>Install a specific release, or without GitHub access</summary>
+
+To install exactly one release, add its tag after the `@`. The tags are listed on
+the [Releases page](https://github.com/bonifazi/validatoR/releases):
+
+``` r
+pak::pak("bonifazi/validatoR@v0.0.9-beta")
+```
+
+You can also download a file from the Releases page and install it from disk.
+The source tarball (`.tar.gz`) works on Windows, Linux and macOS, and the
+binary (`.zip`) is a shortcut for Windows. Installing from a file does not
+install the packages validatoR depends on, so install them first:
+
+``` r
+install.packages("ggplot2")
+
+# source tarball, any system
+install.packages("validatoR_0.0.9.tar.gz", repos = NULL, type = "source")
+
+# binary, Windows only
+install.packages("validatoR_0.0.9.zip", repos = NULL, type = "win.binary")
+```
+
+</details>
 
 ## A first example
 
@@ -89,6 +130,8 @@ vignette("getting-started", package = "validatoR")
 
 As for any R package, each function comes with its own help page with every argument explained:
 `?validate_lr`, `?validate_prediction` and `?rebase_ebv`.
+
+What changed between versions is listed in [NEWS.md](NEWS.md).
 
 ## Feedback
 
