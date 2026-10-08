@@ -24,7 +24,10 @@ test_that("the statistics match the direct formulas and the exact targets", {
   # exact checks against the formulas
   expect_equal(stats["n", "value"], nrow(toy_validation))
   expect_equal(stats["level_bias", "value"], mean(p) - mean(w))
-  expect_equal(stats["level_bias_in_GSD", "value"], (mean(p) - mean(w)) / sqrt(300))
+  expect_equal(
+    stats["level_bias_in_GSD", "value"],
+    (mean(p) - mean(w)) / sqrt(300)
+  )
   expect_equal(stats["dispersion_bias", "value"], cov(p, w) / var(p))
   expect_equal(stats["rho", "value"], cor(p, w))
   expect_equal(stats["inc_acc", "value"], 1 / cor(p, w))
@@ -128,7 +131,7 @@ test_that("val_group subsets the animals and unknown IDs are an error", {
   vg_unknown <- data.frame(id = c(toy_validation$id[1:5], "not_an_animal"))
   expect_error(
     validate_lr(partial_all, whole_all, val_group = vg_unknown),
-    "ID(s) in `val_group` are not in both",
+    "`val_group` must only have IDs that are in both `partial` and `whole`. Not found (1), e.g. not_an_animal.",
     fixed = TRUE
   )
 })
@@ -299,7 +302,13 @@ test_that("missing, constant and too few validation animals are errors", {
 
 test_that("bootstrap = TRUE with average_F is an error", {
   expect_error(
-    validate_lr(partial_all, whole_all, var_a = 300, average_F = 0.05, bootstrap = TRUE),
+    validate_lr(
+      partial_all,
+      whole_all,
+      var_a = 300,
+      average_F = 0.05,
+      bootstrap = TRUE
+    ),
     "`inbreeding` (one value per animal) must be provided instead of `average_F`",
     fixed = TRUE
   )
@@ -343,7 +352,12 @@ test_that("plot_subgroups needs a group label in column 2 of val_group", {
   # a val_group with the IDs only
   vg_ids <- data.frame(id = toy_validation$id[1:300])
   expect_error(
-    validate_lr(partial_all, whole_all, val_group = vg_ids, plot_subgroups = TRUE),
+    validate_lr(
+      partial_all,
+      whole_all,
+      val_group = vg_ids,
+      plot_subgroups = TRUE
+    ),
     msg,
     fixed = TRUE
   )
@@ -351,9 +365,21 @@ test_that("plot_subgroups needs a group label in column 2 of val_group", {
 
 test_that("average_F must be a single number in [0, 1), and not with inbreeding", {
   msg <- "`average_F` must be a single number in [0, 1)."
-  expect_error(validate_lr(partial_all, whole_all, average_F = 1), msg, fixed = TRUE)
-  expect_error(validate_lr(partial_all, whole_all, average_F = -0.1), msg, fixed = TRUE)
-  expect_error(validate_lr(partial_all, whole_all, average_F = NA_real_), msg, fixed = TRUE)
+  expect_error(
+    validate_lr(partial_all, whole_all, average_F = 1),
+    msg,
+    fixed = TRUE
+  )
+  expect_error(
+    validate_lr(partial_all, whole_all, average_F = -0.1),
+    msg,
+    fixed = TRUE
+  )
+  expect_error(
+    validate_lr(partial_all, whole_all, average_F = NA_real_),
+    msg,
+    fixed = TRUE
+  )
   expect_error(
     validate_lr(partial_all, whole_all, average_F = c(0.1, 0.2)),
     msg,
@@ -379,7 +405,12 @@ test_that("inbreeding must be a data frame covering every validation animal", {
 
   # not a data frame
   expect_error(
-    validate_lr(partial_all, whole_all, var_a = 300, inbreeding = inb$inbreeding),
+    validate_lr(
+      partial_all,
+      whole_all,
+      var_a = 300,
+      inbreeding = inb$inbreeding
+    ),
     "`inbreeding` must be a data frame",
     fixed = TRUE
   )
@@ -387,7 +418,7 @@ test_that("inbreeding must be a data frame covering every validation animal", {
   # an animal without a coefficient
   expect_error(
     validate_lr(partial_all, whole_all, var_a = 300, inbreeding = inb[-1, ]),
-    "1 validation animal(s) are missing from `inbreeding`",
+    "`inbreeding` must include every validation animal. Missing (1)",
     fixed = TRUE
   )
 })

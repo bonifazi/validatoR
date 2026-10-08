@@ -80,7 +80,9 @@ test_that("accuracy is only returned when h2 is provided", {
   y <- toy_validation$pheno
 
   expect_false("accuracy" %in% rownames(validate_prediction(x, y)$stats))
-  expect_true("accuracy" %in% rownames(validate_prediction(x, y, h2 = 0.3)$stats))
+  expect_true(
+    "accuracy" %in% rownames(validate_prediction(x, y, h2 = 0.3)$stats)
+  )
 })
 
 test_that("the result has the documented structure", {
@@ -106,8 +108,15 @@ test_that("the result has the documented structure", {
   expect_identical(
     rownames(res_all$stats),
     c(
-      "n", "correlation", "slope", "intercept", "mean_diff", "mse", "rmse",
-      "rmse_in_GSD", "accuracy"
+      "n",
+      "correlation",
+      "slope",
+      "intercept",
+      "mean_diff",
+      "mse",
+      "rmse",
+      "rmse_in_GSD",
+      "accuracy"
     )
   )
 })
@@ -243,7 +252,10 @@ test_that("missing values give an error that reports the counts", {
     validate_prediction(x, toy_validation$whole),
     "`prediction` has 3 and `target` has 0"
   )
-  expect_error(validate_prediction(x, y), "`prediction` has 3 and `target` has 1")
+  expect_error(
+    validate_prediction(x, y),
+    "`prediction` has 3 and `target` has 1"
+  )
 })
 
 test_that("fewer than 3 pairs are rejected", {
@@ -251,7 +263,10 @@ test_that("fewer than 3 pairs are rejected", {
 })
 
 test_that("a prediction or target with no variation is rejected", {
-  expect_error(validate_prediction(rep(1, 5), 1:5), "`prediction` has no variation")
+  expect_error(
+    validate_prediction(rep(1, 5), 1:5),
+    "`prediction` has no variation"
+  )
   expect_error(validate_prediction(1:5, rep(2, 5)), "`target` has no variation")
 })
 
@@ -296,7 +311,10 @@ test_that("bootstrap and plot must be a single TRUE or FALSE", {
 
   expect_error(validate_prediction(x, y, bootstrap = NA), "bootstrap")
   expect_error(validate_prediction(x, y, bootstrap = 1), "bootstrap")
-  expect_error(validate_prediction(x, y, bootstrap = c(TRUE, FALSE)), "bootstrap")
+  expect_error(
+    validate_prediction(x, y, bootstrap = c(TRUE, FALSE)),
+    "bootstrap"
+  )
   expect_error(validate_prediction(x, y, plot = "yes"), "plot")
 })
 

@@ -12,6 +12,12 @@ lr_stats_example <- function(...) {
   return(res$stats)
 }
 
+# ----------------------------------------------------------------------------
+# Block 1. The stored table
+# Tests: The class and its data frame behaviour, the full precision of the
+# stored values, and reading the values in the usual ways.
+# ----------------------------------------------------------------------------
+
 test_that("validate_lr() returns a validatoR_stats table that is a data frame", {
   stats <- lr_stats_example()
 
@@ -52,6 +58,12 @@ test_that("the values can be read in the usual ways", {
   back <- utils::read.csv(file, row.names = 1)
   expect_equal(back$value, stats$value, tolerance = 1e-12)
 })
+
+# ----------------------------------------------------------------------------
+# Block 2. Printing
+# Tests: Fixed notation and significant digits, tiny values, the digits
+# argument, extra arguments, the invisible return, and the bootstrap SE column.
+# ----------------------------------------------------------------------------
 
 test_that("printing uses fixed notation with 4 significant digits", {
   stats <- lr_stats_example()

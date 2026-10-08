@@ -3,7 +3,11 @@
 
 ebv <- toy_validation[, c("id", "partial", "whole")]
 # the animals of the first cohort are the base population
-base_df <- toy_validation[toy_validation$group == "cohort_1", "id", drop = FALSE]
+base_df <- toy_validation[
+  toy_validation$group == "cohort_1",
+  "id",
+  drop = FALSE
+]
 in_base <- toy_validation$id %in% base_df$id
 
 # ----------------------------------------------------------------------------
@@ -192,7 +196,7 @@ test_that("base_pop must be a data frame with IDs that are in data", {
   unknown <- data.frame(id = c(base_df$id[1:2], "not_an_animal"))
   expect_error(
     rebase_ebv(ebv, base_pop = unknown),
-    "1 ID(s) in `base_pop` are not in `data`, e.g. not_an_animal.",
+    "`base_pop` must only have IDs that are in `data`. Not found (1), e.g. not_an_animal.",
     fixed = TRUE
   )
 })
