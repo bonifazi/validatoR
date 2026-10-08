@@ -40,13 +40,15 @@ inputs (mismatched IDs, missing values, duplicates, impossible values)
 and stop with a clear message instead of returning a wrong number, and
 the results are tested against data with known answers. So you know how
 each statistic is computed, and you can compare results across different
-analyses, species and traits, and studies. \## What do you want to do?
+analyses, species and traits, and studies.
+
+## What do you want to do?
 
 | You have | Use |
 |:---|:---|
+| EBVs on different bases that must be put on the same base before you compare or validate them | `rebase_ebv()` |
 | An earlier (“partial”) and a later (“whole”) evaluation of the same animals, and you want the level bias, the dispersion bias, accuracy of the partial EBVs (the LR method), and ratio of accuracies | `validate_lr()` |
 | Predictions and a target to validate them with: pre-corrected phenotypes, true breeding values or other EBVs | `validate_prediction()` |
-| EBVs on different bases that must be put on the same base before you compare or validate them | `rebase_ebv()` |
 
 ## Installation
 
@@ -145,8 +147,8 @@ vignette("getting-started", package = "validatoR")
 ```
 
 As for any R package, each function comes with its own help page with
-every argument explained: `?validate_lr`, `?validate_prediction` and
-`?rebase_ebv`.
+every argument explained: `?rebase_ebv`, `?validate_lr` and
+`?validate_prediction`.
 
 What changed between versions is listed in [NEWS.md](NEWS.md).
 

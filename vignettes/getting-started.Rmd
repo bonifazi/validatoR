@@ -25,9 +25,9 @@ explains only what is specific to the package.
 
 | You have | You want | Use |
 |:---------|:---------|:----|
+| EBVs expressed on different bases | EBVs on a common base, before you compare or validate them | `rebase_ebv()` |
 | Two evaluations of the same animals: a partial one, which leaves out the records of the validation animals, and a whole one, which uses all records | The level bias, the dispersion bias, the accuracy of the partial EBVs (the LR method), and the ratio of accuracies | `validate_lr()` |
 | Predictions and a target to validate them with: pre-corrected phenotypes, true breeding values from a simulation, or other EBVs | The correlation, the regression of the target on the prediction, the mean difference and the MSE, and the accuracy when the target is a pre-corrected phenotype | `validate_prediction()` |
-| EBVs expressed on different bases | EBVs on a common base before you compare or validate them | `rebase_ebv()` |
 
 The validation animals are the animals whose EBVs you validate, for example the
 youngest generation. The LR method assumes that the evaluation accounts for
@@ -48,6 +48,52 @@ whole evaluation, a pre-corrected phenotype simulated with a heritability of
 LR statistics at exact values (level bias 0.75, dispersion bias 0.90 and rho
 0.85, the correlation between the partial and the whole EBVs). The additive
 genetic variance is 300.
+
+## Rebasing EBVs
+
+Rebase first when the EBVs you want to validate are on different bases, and
+validate the rebased EBVs afterwards. `rebase_ebv()` subtracts the mean EBV of a
+base population from the EBVs of all animals, so that the base population has a
+mean of 0 in each EBV column. The base population must lie outside the
+validation animals: the level bias of a validation is one of the quantities you
+want to estimate, and rebasing on the validation animals themselves would remove
+part of it. `rebase_ebv()` takes two data frames. The first has the ID in
+column 1 and one column of EBVs per trait or evaluation, and the second has the
+IDs of the base population.
+
+```{r rebase}
+# the EBVs to rebase
+ebv <- toy_validation[, c("id", "partial", "whole")]
+# the IDs of the base population
+base_pop <- toy_validation[toy_validation$group == "cohort_1", "id", drop = FALSE]
+
+rebased <- rebase_ebv(ebv, base_pop = base_pop)
+head(rebased$rebased_ebv)
+```
+
+Cohort 1 only illustrates the call. In a real validation, the base population is
+a group outside the validation animals, for example older animals. The result is
+a list, and the data frame is `rebased$rebased_ebv`. Every animal in a column
+moves by the same amount, so differences between animals do not change.
+
+If you already know the values to subtract, use `constant_value` instead of
+`base_pop`, with one number per EBV column, in the order of the columns. Here
+100 is subtracted from `partial` and 90 from `whole`. With `plot = TRUE`, the
+result also has `plots`, a named list with one plot per EBV column, named after
+the columns of your data. So here the plot of the column called `partial` is
+`plots$partial`, and with your own data the names follow your own columns. Each
+plot shows the rebased EBVs against the original ones: the points stay on a line
+of slope 1, shifted by the value subtracted.
+
+```{r rebase-constant}
+rebased_constant <- rebase_ebv(ebv, constant_value = c(100, 90), plot = TRUE)
+head(rebased_constant$rebased_ebv, 3)
+# the plot of the column called "partial"
+rebased_constant$plots$partial
+```
+
+The examples below use the EBVs of `toy_validation` as they are, because its
+two evaluations are already on the same base.
 
 ## The LR method
 
@@ -73,13 +119,20 @@ The result is a list with `stats`, the table above, and `plot`. The rows of
 | `level_bias` | Mean of the partial EBVs minus mean of the whole EBVs | 0 |
 | `dispersion_bias` | Slope of the regression of the whole EBVs on the partial EBVs | 1. Below 1 the partial EBVs are over-dispersed relative to the whole EBVs (or the whole EBVs are under-dispersed), above 1 the reverse |
 | `rho` | Correlation between the partial and the whole EBVs, the ratio of their accuracies | Close to 1 |
-| `inc_acc` | `1 / rho`, the factor by which accuracy increases from the partial to the whole EBVs | 1 means no gain |
+| `inc_acc` | `1 / rho`, the increase in accuracy obtained with the whole evaluation, as a ratio to the accuracy of the partial evaluation | 1 means no gain |
 
 In the example, the level bias is
 `r round(res$stats["level_bias", "value"], 2)`, the dispersion
 bias is `r round(res$stats["dispersion_bias", "value"], 2)`
 and rho is `r round(res$stats["rho", "value"], 2)`, exactly the values that were
 simulated. The partial EBVs are over-dispersed, as simulated.
+
+To express `inc_acc` as the increase in accuracy relative to the partial
+evaluation, in percentage, subtract 1 and multiply by 100 (Bonifazi et al.,
+2022). Here that is `r round((res$stats["inc_acc", "value"] - 1) * 100, 1)`%.
+For example, a rho of 0.80 gives an `inc_acc` of 1.25, a relative increase in
+population accuracy of 25% when moving from the partial to the whole
+evaluation.
 
 Legarra and Reverter (2018) suggest checking the level bias and the dispersion
 first, and comparing accuracies only for evaluations that are approximately
@@ -232,48 +285,6 @@ res_rmse$stats
 res_rmse$plot
 ```
 
-## Rebasing EBVs
-
-`rebase_ebv()` subtracts the mean EBV of a base population from the EBVs of all
-animals, so that the base population has a mean of 0 in each EBV column. Use it
-when two evaluations define their bases differently. The level bias between a
-partial and a whole evaluation is one of the quantities the LR method
-estimates, so the base population must lie outside the validation animals;
-otherwise rebasing removes part of that bias. `rebase_ebv()` takes two data
-frames. The first has the ID in column 1 and one column of EBVs per trait or
-evaluation, and the second has the IDs of the base population.
-
-```{r rebase}
-# the EBVs to rebase
-ebv <- toy_validation[, c("id", "partial", "whole")]
-# the IDs of the base population
-base_pop <- toy_validation[toy_validation$group == "cohort_1", "id", drop = FALSE]
-
-rebased <- rebase_ebv(ebv, base_pop = base_pop)
-head(rebased$rebased_ebv)
-```
-
-Cohort 1 only illustrates the call. In a real validation, the base population is
-a group outside the validation animals, for example older animals. The result is
-a list, and the data frame is `rebased$rebased_ebv`. Every animal in a column
-moves by the same amount, so differences between animals do not change.
-
-If you already know the values to subtract, use `constant_value` instead of
-`base_pop`, with one number per EBV column, in the order of the columns. Here
-100 is subtracted from `partial` and 90 from `whole`. With `plot = TRUE`, the
-result also has `plots`, a named list with one plot per EBV column, named after
-the columns of your data. So here the plot of the column called `partial` is
-`plots$partial`, and with your own data the names follow your own columns. Each
-plot shows the rebased EBVs against the original ones: the points stay on a line
-of slope 1, shifted by the value subtracted.
-
-```{r rebase-constant}
-rebased_constant <- rebase_ebv(ebv, constant_value = c(100, 90), plot = TRUE)
-head(rebased_constant$rebased_ebv, 3)
-# the plot of the column called "partial"
-rebased_constant$plots$partial
-```
-
 ## Messages and errors
 
 The functions stop with a message when an input cannot be used. `validate_lr()`
@@ -286,10 +297,16 @@ res_left_out <- validate_lr(partial[1:1990, ], whole)
 
 ## Further reading
 
-Each function has a help page that describes every argument: `?validate_lr`,
-`?validate_prediction` and `?rebase_ebv`.
+Each function has a help page that describes every argument: `?rebase_ebv`,
+`?validate_lr` and `?validate_prediction`.
 
 The LR method is described in Legarra, A. and Reverter, A. (2018). Semi-parametric
 estimates of population accuracy and bias of predictions of breeding values and
 future phenotypes using the LR method. *Genetics Selection Evolution* 50:53.
 <https://doi.org/10.1186/s12711-018-0426-6>
+
+The increase in accuracy as a percentage is described in Bonifazi, R., Calus,
+M. P. L., ten Napel, J., Veerkamp, R. F., Michenet, A., Savoia, S., Cromie, A.
+and Vandenplas, J. (2022). International single-step SNPBLUP beef cattle
+evaluations for Limousin weaning weight. *Genetics Selection Evolution* 54:57.
+<https://doi.org/10.1186/s12711-022-00748-0>
