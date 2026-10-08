@@ -7,6 +7,8 @@
 
 [![GitHub
 Release](https://img.shields.io/github/v/release/bonifazi/validatoR?include_prereleases)](https://github.com/bonifazi/validatoR/releases)
+[![Development
+version](https://img.shields.io/github/r-package/v/bonifazi/validatoR?label=development)](https://github.com/bonifazi/validatoR/blob/main/DESCRIPTION)
 [![Licence:
 MIT](https://img.shields.io/badge/Licence-MIT-green)](https://github.com/bonifazi/validatoR/blob/main/LICENSE.md)
 [![R-CMD-check](https://github.com/bonifazi/validatoR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/bonifazi/validatoR/actions/workflows/R-CMD-check.yaml)
@@ -53,7 +55,9 @@ analyses, species and traits, and studies.
 ## Installation
 
 Install the development version from
-[GitHub](https://github.com/bonifazi/validatoR) using `pak`:
+[GitHub](https://github.com/bonifazi/validatoR) using `pak`. This is the
+`main` branch, the “development” badge above, which can be ahead of the
+latest release:
 
 ``` r
 # install.packages("pak")
@@ -74,9 +78,10 @@ remotes::install_github("bonifazi/validatoR", build_vignettes = TRUE)
 Install a specific release, or without GitHub access
 </summary>
 
-To install exactly one release, add its tag after the `@`. The tags are
-listed on the [Releases
-page](https://github.com/bonifazi/validatoR/releases):
+To install exactly one release, the “release” badge above, add its tag
+after the `@`. The tags are listed on the [Releases
+page](https://github.com/bonifazi/validatoR/releases). The files on a
+release give the same version as its tag:
 
 ``` r
 pak::pak("bonifazi/validatoR@v0.0.9-beta")
