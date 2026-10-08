@@ -6,7 +6,7 @@
 \alias{validatoR-package}
 \title{validatoR: Validation of (Genomic) Prediction Models}
 \description{
-Tools for validating (genomic) prediction models in animal breeding. Includes native support for reading software output files (e.g. MiXBLUP) and utilities for defining validation groups.
+Tools for validating (genomic) prediction models in animal breeding.
 }
 \seealso{
 Useful links:

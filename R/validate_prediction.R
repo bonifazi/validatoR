@@ -286,6 +286,7 @@ validate_prediction <- function(
 #' @importFrom ggplot2 .data
 #' @noRd
 .plot_general <- function(data, stats_df) {
+  # scatter plot with the slope-1 line and the fitted regression
   p <- ggplot2::ggplot(
     data,
     ggplot2::aes(x = .data$prediction, y = .data$target)

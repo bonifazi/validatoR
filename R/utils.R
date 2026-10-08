@@ -19,7 +19,7 @@
 #' Used for the number of bootstrap resamples.
 #' `.run_bootstrap()` checks it too, but using R's default `stopifnot()` message.
 #' This is a more user-friendly error message.
-#' 
+#'
 #' @param x Value to check.
 #' @return `x`, invisibly.
 #' @noRd
@@ -74,7 +74,7 @@
 #' First few elements of a vector, pasted, for error messages
 #'
 #' @param x Vector.
-#' @param k Number of elements to show. Default to 3.
+#' @param k Number of elements to show. Defaults to 3.
 #' @return A single string.
 #' @noRd
 .show_some <- function(x, k = 3L) {

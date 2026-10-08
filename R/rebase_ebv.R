@@ -48,7 +48,12 @@
 #' only when the value subtracted from that column is the mean EBV of the group,
 #' for example a base-population mean computed beforehand.
 #'
-#' # Animals and IDs
+#' # Plot
+#' The grey line has slope 1. The blue line is the regression of the rebased
+#' EBVs on the original EBVs: its slope is 1 and its intercept is minus the value
+#' that was subtracted.
+#'
+#' # Animals, IDs and errors
 #' IDs are matched as text, with numbers written in full (`100000`, never
 #' `1e+05`), so `1` and `"1"` are the same animal. The function stops with an
 #' error when the IDs in `data` or in `base_pop` are missing or duplicated
@@ -56,11 +61,6 @@
 #' `base_pop` has no animals or has IDs that are not in `data`, or when any EBV
 #' in `data` is missing or infinite (a missing EBV would also leave the
 #' base-population mean undefined).
-#'
-#' # Plot
-#' The grey line has slope 1. The blue line is the regression of the rebased
-#' EBVs on the original EBVs: its slope is 1 and its intercept is minus the value
-#' that was subtracted.
 #'
 #' @returns
 #' A list with two elements, `rebased_ebv` and `plots`.
@@ -172,9 +172,7 @@ rebase_ebv <- function(
     )
   }
   # check that constant_value has exactly one value per EBV column
-  if (
-    !is.null(constant_value) && length(constant_value) != length(ebv_cols)
-  ) {
+  if (!is.null(constant_value) && length(constant_value) != length(ebv_cols)) {
     stop(
       "`constant_value` must have one number per EBV column (",
       length(ebv_cols),
@@ -205,8 +203,9 @@ rebase_ebv <- function(
     not_found <- setdiff(base_ids, ids)
     if (length(not_found) > 0L) {
       stop(
+        "`base_pop` must only have IDs that are in `data`. Not found (",
         length(not_found),
-        " ID(s) in `base_pop` are not in `data`, e.g. ",
+        "), e.g. ",
         .show_some(not_found),
         ".",
         call. = FALSE
@@ -246,6 +245,7 @@ rebase_ebv <- function(
         " in the base population."
       )
     }
+    # report what was subtracted, per EBV column
     for (j in seq_along(ebv_cols)) {
       if (is.null(in_base)) {
         message("`", ebv_cols[j], "`: ", round(shift[[j]], 4), " subtracted.")
@@ -289,6 +289,7 @@ rebase_ebv <- function(
   plot_data <- data.frame(original = original, rebased = rebased)
   # regression of the rebased on the original EBVs
   fit <- stats::coef(stats::lm(rebased ~ original, data = plot_data))
+  # scatter plot with the slope-1 line and the fitted regression
   p <- ggplot2::ggplot(
     plot_data,
     ggplot2::aes(x = .data$original, y = .data$rebased)

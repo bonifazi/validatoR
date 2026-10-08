@@ -1,5 +1,5 @@
 # R/bootstrap.R
-# Shared bootstrap engine used by validation functions such as validate_lr() and validate_general().
+# Shared bootstrap engine used by validation functions such as validate_lr() and validate_prediction().
 # Method-agnostic: it knows nothing about the actual statistics, it only resamples
 # rows and summarises whatever `stat_fun` returns.
 
@@ -35,6 +35,7 @@
 #'
 #' @noRd
 .run_bootstrap <- function(data, stat_fun, n_boot, ncpus = 1L, ...) {
+  # check the engine inputs (internal helper, so R's default messages)
   stopifnot(
     is.data.frame(data),
     is.function(stat_fun),
@@ -70,9 +71,11 @@
   # (skipped when serial; detectCores() can also return NA, hence isTRUE)
   if (ncpus > 1L && isTRUE(ncpus > parallel::detectCores())) {
     stop(
-      "`ncpus` (",
+      "`ncpus` must not be larger than the number of cores available (",
+      parallel::detectCores(),
+      "), but it is ",
       ncpus,
-      ") is larger than the number of cores available.",
+      ".",
       call. = FALSE
     )
   }

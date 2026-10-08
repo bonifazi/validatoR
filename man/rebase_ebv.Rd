@@ -74,7 +74,13 @@ only when the value subtracted from that column is the mean EBV of the group,
 for example a base-population mean computed beforehand.
 }
 
-\section{Animals and IDs}{
+\section{Plot}{
+The grey line has slope 1. The blue line is the regression of the rebased
+EBVs on the original EBVs: its slope is 1 and its intercept is minus the value
+that was subtracted.
+}
+
+\section{Animals, IDs and errors}{
 IDs are matched as text, with numbers written in full (\code{100000}, never
 \code{1e+05}), so \code{1} and \code{"1"} are the same animal. The function stops with an
 error when the IDs in \code{data} or in \code{base_pop} are missing or duplicated
@@ -82,12 +88,6 @@ error when the IDs in \code{data} or in \code{base_pop} are missing or duplicate
 \code{base_pop} has no animals or has IDs that are not in \code{data}, or when any EBV
 in \code{data} is missing or infinite (a missing EBV would also leave the
 base-population mean undefined).
-}
-
-\section{Plot}{
-The grey line has slope 1. The blue line is the regression of the rebased
-EBVs on the original EBVs: its slope is 1 and its intercept is minus the value
-that was subtracted.
 }
 
 \examples{

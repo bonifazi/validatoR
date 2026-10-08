@@ -52,6 +52,7 @@
 #' res$stats["rho", "value"]
 #' @export
 print.validatoR_stats <- function(x, digits = 4, ...) {
+  # check that digits is a single whole number of at least 1
   if (
     !(is.numeric(digits) &&
       length(digits) == 1L &&
@@ -61,6 +62,7 @@ print.validatoR_stats <- function(x, digits = 4, ...) {
   ) {
     stop("`digits` must be a single whole number of at least 1.", call. = FALSE)
   }
+  # format the values for printing, keeping the stored values unchanged
   shown <- as.data.frame(x)
   shown[] <- lapply(shown, function(column) {
     return(

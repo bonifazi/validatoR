@@ -104,8 +104,11 @@ average inbreeding of the validation animals. Only when \code{var_a} and
 with it so that tables from several groups can be compared.
 \item \code{rho}: \code{cor(p, w)}, the ratio of the accuracies of the partial and the
 whole EBVs.
-\item \code{inc_acc}: \code{1 / rho}, the relative increase in accuracy from the partial to
-the whole EBVs.
+\item \code{inc_acc}: \code{1 / rho}, the increase in accuracy obtained with the whole
+evaluation, as a ratio to the accuracy of the partial evaluation (see Bonifazi
+et al., 2022). 1 means no gain. For the increase relative to the partial
+evaluation as a percentage, use \code{(inc_acc - 1) * 100}. For example, a \code{rho} of 0.80 gives
+an \code{inc_acc} of 1.25, which corresponds to an increase of 25\%.
 }
 
 \code{plot} is a ggplot object when \code{plot = TRUE}, and \code{NULL} otherwise.
@@ -127,15 +130,6 @@ evaluations to estimate the level bias, the dispersion bias, and accuracies
 (Legarra and Reverter, 2018).
 }
 
-\section{Animals and IDs}{
-IDs are matched as text, with numbers written in full (\code{100000}, never
-\code{1e+05}), so \code{1} and \code{"1"}, or \code{100000} and \code{"100000"}, are the same animal.
-Without \code{val_group}, animals found in only one of \code{partial} and \code{whole} are
-left out, with a message. The function stops with an error when validation
-animals have missing EBVs or inbreeding coefficients, when there are fewer
-than 3 validation animals, or when the EBVs have no variation.
-}
-
 \section{Standard errors}{
 With \code{bootstrap = TRUE}, the validation animals are resampled with
 replacement \code{n_boot} times and all statistics are recomputed in each
@@ -151,6 +145,15 @@ the partial EBVs, so its slope is the dispersion bias; the level bias is not
 its intercept.
 }
 
+\section{Animals, IDs and errors}{
+IDs are matched as text, with numbers written in full (\code{100000}, never
+\code{1e+05}), so \code{1} and \code{"1"}, or \code{100000} and \code{"100000"}, are the same animal.
+Without \code{val_group}, animals found in only one of \code{partial} and \code{whole} are
+left out, with a message. The function stops with an error when validation
+animals have missing EBVs or inbreeding coefficients, when there are fewer
+than 3 validation animals, or when the EBVs have no variation.
+}
+
 \examples{
 p <- toy_validation[, c("id", "partial")]
 w <- toy_validation[, c("id", "whole")]
@@ -159,6 +162,10 @@ inb <- toy_validation[, c("id", "inbreeding")]
 # all animals, with the accuracy of the partial EBVs
 res <- validate_lr(p, w, var_a = 300, inbreeding = inb)
 res$stats
+
+# increase in accuracy relative to the partial evaluation, as a
+# percentage (equal to 17.6 for this toy data)
+(res$stats["inc_acc", "value"] - 1) * 100
 
 # two cohorts as the validation group, plot coloured by cohort, with the
 # axes in genetic standard deviations
@@ -178,6 +185,11 @@ Legarra, A. and Reverter, A. (2018). Semi-parametric estimates of
 population accuracy and bias of predictions of breeding values and future
 phenotypes using the LR method. Genetics Selection Evolution.
 \doi{10.1186/s12711-018-0426-6}
+
+Bonifazi, R., Calus, M. P. L., ten Napel, J., Veerkamp, R. F., Michenet, A.,
+Savoia, S., Cromie, A. and Vandenplas, J. (2022). International single-step
+SNPBLUP beef cattle evaluations for Limousin weaning weight. Genetics
+Selection Evolution 54:57. \doi{10.1186/s12711-022-00748-0}
 }
 \seealso{
 \code{\link[=validate_prediction]{validate_prediction()}} to validate predictions against a target
