@@ -31,7 +31,10 @@ test_that("the statistics match the direct formulas and the exact targets", {
   expect_equal(stats["dispersion_bias", "value"], cov(p, w) / var(p))
   expect_equal(stats["rho", "value"], cor(p, w))
   expect_equal(stats["inc_acc", "value"], 1 / cor(p, w))
-  expect_equal(stats["average_F", "value"], mean(toy_validation$inbreeding))
+  expect_equal(
+    stats["average_inbreeding", "value"],
+    mean(toy_validation$inbreeding)
+  )
   expect_equal(stats["var_a", "value"], 300)
   expect_equal(
     stats["accuracy_partial", "value"],
@@ -65,8 +68,8 @@ test_that("a tiny average inbreeding is kept, not rounded to 0", {
   inb$inbreeding <- seq(0, 2e-7, length.out = nrow(inb))
 
   res <- validate_lr(partial_all, whole_all, var_a = 300, inbreeding = inb)
-  expect_gt(res$stats["average_F", "value"], 0)
-  expect_equal(res$stats["average_F", "value"], mean(inb$inbreeding))
+  expect_gt(res$stats["average_inbreeding", "value"], 0)
+  expect_equal(res$stats["average_inbreeding", "value"], mean(inb$inbreeding))
 
   set.seed(1)
   res_boot <- validate_lr(
@@ -77,7 +80,10 @@ test_that("a tiny average inbreeding is kept, not rounded to 0", {
     bootstrap = TRUE,
     n_boot = 20
   )
-  expect_equal(res_boot$stats["average_F", "value"], mean(inb$inbreeding))
+  expect_equal(
+    res_boot$stats["average_inbreeding", "value"],
+    mean(inb$inbreeding)
+  )
 })
 
 # ----------------------------------------------------------------------------
@@ -182,7 +188,7 @@ test_that("inbreeding of 1 or more is accepted", {
   inb$inbreeding[1:3] <- c(1, 1.2, 1.5)
 
   res <- validate_lr(partial_all, whole_all, var_a = 300, inbreeding = inb)
-  expect_equal(res$stats["average_F", "value"], mean(inb$inbreeding))
+  expect_equal(res$stats["average_inbreeding", "value"], mean(inb$inbreeding))
   expect_false(is.nan(res$stats["accuracy_partial", "value"]))
 })
 
@@ -208,8 +214,8 @@ test_that("accuracy is NaN with a warning when the average inbreeding is 1 or mo
 # ----------------------------------------------------------------------------
 # Block 4. Invalid input gives clear errors
 # Tests: Unusable partial, whole and val_group inputs, no shared animals, the
-# flags and numbers, the average_F and inbreeding arguments, missing, constant or
-# too few EBVs, and bootstrap with average_F.
+# flags and numbers, the average_inbreeding and inbreeding arguments, missing, constant or
+# too few EBVs, and bootstrap with average_inbreeding.
 # ----------------------------------------------------------------------------
 
 test_that("partial and whole must be data frames with IDs and numeric EBVs", {
@@ -300,16 +306,16 @@ test_that("missing, constant and too few validation animals are errors", {
   )
 })
 
-test_that("bootstrap = TRUE with average_F is an error", {
+test_that("bootstrap = TRUE with average_inbreeding is an error", {
   expect_error(
     validate_lr(
       partial_all,
       whole_all,
       var_a = 300,
-      average_F = 0.05,
+      average_inbreeding = 0.05,
       bootstrap = TRUE
     ),
-    "`inbreeding` (one value per animal) must be provided instead of `average_F`",
+    "`inbreeding` (one value per animal) must be provided instead of `average_inbreeding`",
     fixed = TRUE
   )
 })
@@ -363,39 +369,39 @@ test_that("plot_subgroups needs a group label in column 2 of val_group", {
   )
 })
 
-test_that("average_F must be a single number in [0, 1), and not with inbreeding", {
-  msg <- "`average_F` must be a single number in [0, 1)."
+test_that("average_inbreeding must be a single number in [0, 1), and not with inbreeding", {
+  msg <- "`average_inbreeding` must be a single number in [0, 1)."
   expect_error(
-    validate_lr(partial_all, whole_all, average_F = 1),
+    validate_lr(partial_all, whole_all, average_inbreeding = 1),
     msg,
     fixed = TRUE
   )
   expect_error(
-    validate_lr(partial_all, whole_all, average_F = -0.1),
+    validate_lr(partial_all, whole_all, average_inbreeding = -0.1),
     msg,
     fixed = TRUE
   )
   expect_error(
-    validate_lr(partial_all, whole_all, average_F = NA_real_),
+    validate_lr(partial_all, whole_all, average_inbreeding = NA_real_),
     msg,
     fixed = TRUE
   )
   expect_error(
-    validate_lr(partial_all, whole_all, average_F = c(0.1, 0.2)),
+    validate_lr(partial_all, whole_all, average_inbreeding = c(0.1, 0.2)),
     msg,
     fixed = TRUE
   )
 
-  # average_F and inbreeding are alternatives
+  # average_inbreeding and inbreeding are alternatives
   expect_error(
     validate_lr(
       partial_all,
       whole_all,
       var_a = 300,
-      average_F = 0.05,
+      average_inbreeding = 0.05,
       inbreeding = toy_validation[, c("id", "inbreeding")]
     ),
-    "`average_F` and `inbreeding` must not both be provided.",
+    "`average_inbreeding` and `inbreeding` must not both be provided.",
     fixed = TRUE
   )
 })

@@ -148,8 +148,8 @@ With `var_a` and the inbreeding of the validation animals, `validate_lr()` adds
 between true and estimated breeding values across the validation animals), and
 `level_bias_in_GSD`, the level bias in genetic standard deviations. `var_a` is the
 additive genetic variance. The inbreeding is a data frame with the ID in
-column 1 and the coefficient in column 2, or `average_F`, the average
-inbreeding, if you only have that.
+column 1 and the coefficient in column 2, or `average_inbreeding`, the
+average inbreeding, if you only have that.
 
 ```{r lr-accuracy}
 # get the inbreeding coefficients

@@ -81,13 +81,13 @@ test_that("printing uses fixed notation with 4 significant digits", {
 test_that("printing does not turn a tiny value into 0", {
   tiny <- .new_stats(data.frame(
     value = c(2000, 4.922e-08, 0.8609343),
-    row.names = c("n", "average_F", "rho")
+    row.names = c("n", "average_inbreeding", "rho")
   ))
   shown <- capture.output(print(tiny))
 
   expect_true(any(grepl("0.00000004922", shown, fixed = TRUE)))
   expect_false(any(grepl("e[+-][0-9]", shown)))
-  expect_equal(tiny["average_F", "value"], 4.922e-08)
+  expect_equal(tiny["average_inbreeding", "value"], 4.922e-08)
 })
 
 test_that("digits changes the display and is checked", {

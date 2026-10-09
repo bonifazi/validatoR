@@ -1,5 +1,8 @@
 # validatoR (development version)
 
+## Breaking changes
+- renamed `average_F` to `average_inbreeding` in `validate_lr()`, also in its `stats` table
+
 ## New features
 - added `group` and `plot_subgroups` to `validate_prediction()`
 

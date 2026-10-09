@@ -9,7 +9,7 @@ validate_lr(
   whole,
   val_group = NULL,
   var_a = NULL,
-  average_F = NULL,
+  average_inbreeding = NULL,
   inbreeding = NULL,
   plot = FALSE,
   plot_verbose = FALSE,
@@ -39,17 +39,17 @@ in column 1 and, optionally, a group label in column 2 (used by
 Needed for the level bias in genetic standard deviations, for the accuracy
 of the partial EBVs, and for \code{plot_in_gsd}. Defaults to \code{NULL}.}
 
-\item{average_F}{Optional single number in [0, 1): the average inbreeding of
-the validation animals as a coefficient, not a percentage (\code{0.05}, not
-\code{5}), used for the accuracy of the partial EBVs. Provide either \code{average_F}
-or \code{inbreeding}, not both. Defaults to \code{NULL}.}
+\item{average_inbreeding}{Optional single number in [0, 1): the average
+inbreeding of the validation animals as a coefficient, not a percentage
+(\code{0.05}, not \code{5}), used for the accuracy of the partial EBVs. Provide
+either \code{average_inbreeding} or \code{inbreeding}, not both. Defaults to \code{NULL}.}
 
 \item{inbreeding}{Optional data frame with animal IDs in column 1 and
 inbreeding coefficients (numbers of at least 0, as coefficients and not
-percentages) in column 2. It must include
-every validation animal; other animals are ignored. Use it instead of
-\code{average_F} when \code{bootstrap = TRUE}, so that the average inbreeding is
-recomputed in every resample. Defaults to \code{NULL}.}
+percentages) in column 2. It must include every validation animal; other
+animals are ignored. Use it instead of \code{average_inbreeding} when
+\code{bootstrap = TRUE}, so that the average inbreeding is recomputed in every
+resample. Defaults to \code{NULL}.}
 
 \item{plot}{Logical. If \code{TRUE}, also return a ggplot2 scatter plot of the
 whole EBVs on the partial EBVs. Defaults to \code{FALSE}.}
@@ -98,10 +98,11 @@ provided.
 over-dispersed, and values above 1 mean they are under-dispersed.
 \item \code{accuracy_partial}: \code{sqrt(cov(p, w) / ((1 - F) * var_a))}, with \code{F} being the
 average inbreeding of the validation animals. Only when \code{var_a} and
-\code{average_F} or \code{inbreeding} are provided. It is \code{NaN}, with a warning, when
-\code{cov(p, w)} is negative or the average inbreeding is 1 or more.
-\item \code{average_F} and \code{var_a}: the values used for \code{accuracy_partial}, returned
-with it so that tables from several groups can be compared.
+\code{average_inbreeding} or \code{inbreeding} are provided. It is \code{NaN}, with a
+warning, when \code{cov(p, w)} is negative or the average inbreeding is 1 or
+more.
+\item \code{average_inbreeding} and \code{var_a}: the values used for \code{accuracy_partial},
+returned with it so that tables from several groups can be compared.
 \item \code{rho}: \code{cor(p, w)}, the ratio of the accuracies of the partial and the
 whole EBVs.
 \item \code{inc_acc}: \code{1 / rho}, the increase in accuracy obtained with the whole
@@ -135,8 +136,8 @@ With \code{bootstrap = TRUE}, the validation animals are resampled with
 replacement \code{n_boot} times and all statistics are recomputed in each
 resample. The \code{SE} column is the standard deviation of the resampled values.
 The average inbreeding is recomputed in every resample from \code{inbreeding},
-which is why \code{average_F} cannot be used with the bootstrap. \code{n} has no \code{SE},
-and \code{var_a} has an \code{SE} of 0 because it is a constant.
+which is why \code{average_inbreeding} cannot be used with the bootstrap. \code{n} has
+no \code{SE}, and \code{var_a} has an \code{SE} of 0 because it is a constant.
 }
 
 \section{Plot}{

@@ -23,16 +23,16 @@
 #' @param var_a Optional single positive number: the additive genetic variance.
 #'   Needed for the level bias in genetic standard deviations, for the accuracy
 #'   of the partial EBVs, and for `plot_in_gsd`. Defaults to `NULL`.
-#' @param average_F Optional single number in \[0, 1): the average inbreeding of
-#'   the validation animals as a coefficient, not a percentage (`0.05`, not
-#'   `5`), used for the accuracy of the partial EBVs. Provide either `average_F`
-#'   or `inbreeding`, not both. Defaults to `NULL`.
+#' @param average_inbreeding Optional single number in \[0, 1): the average
+#'   inbreeding of the validation animals as a coefficient, not a percentage
+#'   (`0.05`, not `5`), used for the accuracy of the partial EBVs. Provide
+#'   either `average_inbreeding` or `inbreeding`, not both. Defaults to `NULL`.
 #' @param inbreeding Optional data frame with animal IDs in column 1 and
 #'   inbreeding coefficients (numbers of at least 0, as coefficients and not
-#'   percentages) in column 2. It must include
-#'   every validation animal; other animals are ignored. Use it instead of
-#'   `average_F` when `bootstrap = TRUE`, so that the average inbreeding is
-#'   recomputed in every resample. Defaults to `NULL`.
+#'   percentages) in column 2. It must include every validation animal; other
+#'   animals are ignored. Use it instead of `average_inbreeding` when
+#'   `bootstrap = TRUE`, so that the average inbreeding is recomputed in every
+#'   resample. Defaults to `NULL`.
 #' @param plot Logical. If `TRUE`, also return a ggplot2 scatter plot of the
 #'   whole EBVs on the partial EBVs. Defaults to `FALSE`.
 #' @param plot_verbose Logical. If `TRUE` (and `plot = TRUE`), add the number of
@@ -70,8 +70,8 @@
 #' replacement `n_boot` times and all statistics are recomputed in each
 #' resample. The `SE` column is the standard deviation of the resampled values.
 #' The average inbreeding is recomputed in every resample from `inbreeding`,
-#' which is why `average_F` cannot be used with the bootstrap. `n` has no `SE`,
-#' and `var_a` has an `SE` of 0 because it is a constant.
+#' which is why `average_inbreeding` cannot be used with the bootstrap. `n` has
+#' no `SE`, and `var_a` has an `SE` of 0 because it is a constant.
 #'
 #' # Plot
 #' The grey line has slope 1. The blue line is the regression of the whole on
@@ -104,10 +104,11 @@
 #'   over-dispersed, and values above 1 mean they are under-dispersed.
 #' * `accuracy_partial`: `sqrt(cov(p, w) / ((1 - F) * var_a))`, with `F` being the
 #'   average inbreeding of the validation animals. Only when `var_a` and
-#'   `average_F` or `inbreeding` are provided. It is `NaN`, with a warning, when
-#'   `cov(p, w)` is negative or the average inbreeding is 1 or more.
-#' * `average_F` and `var_a`: the values used for `accuracy_partial`, returned
-#'   with it so that tables from several groups can be compared.
+#'   `average_inbreeding` or `inbreeding` are provided. It is `NaN`, with a
+#'   warning, when `cov(p, w)` is negative or the average inbreeding is 1 or
+#'   more.
+#' * `average_inbreeding` and `var_a`: the values used for `accuracy_partial`,
+#'   returned with it so that tables from several groups can be compared.
 #' * `rho`: `cor(p, w)`, the ratio of the accuracies of the partial and the
 #'   whole EBVs.
 #' * `inc_acc`: `1 / rho`, the increase in accuracy obtained with the whole
@@ -163,7 +164,7 @@ validate_lr <- function(
   whole,
   val_group = NULL,
   var_a = NULL,
-  average_F = NULL,
+  average_inbreeding = NULL,
   inbreeding = NULL,
   plot = FALSE,
   plot_verbose = FALSE,
@@ -196,29 +197,32 @@ validate_lr <- function(
       call. = FALSE
     )
   }
-  # check for average_F being a single number in [0, 1)
+  # check for average_inbreeding being a single number in [0, 1)
   if (
-    !is.null(average_F) &&
-      !(is.numeric(average_F) &&
-        length(average_F) == 1L &&
-        !is.na(average_F) &&
-        average_F >= 0 &&
-        average_F < 1)
+    !is.null(average_inbreeding) &&
+      !(is.numeric(average_inbreeding) &&
+        length(average_inbreeding) == 1L &&
+        !is.na(average_inbreeding) &&
+        average_inbreeding >= 0 &&
+        average_inbreeding < 1)
   ) {
-    stop("`average_F` must be a single number in [0, 1).", call. = FALSE)
-  }
-  # check that either average_F or inbreeding is provided, not both
-  if (!is.null(average_F) && !is.null(inbreeding)) {
     stop(
-      "`average_F` and `inbreeding` must not both be provided.",
+      "`average_inbreeding` must be a single number in [0, 1).",
       call. = FALSE
     )
   }
-  # check that inbreeding is provided with bootstrap = TRUE instead of average_F
-  if (isTRUE(bootstrap) && !is.null(average_F)) {
+  # check that either average_inbreeding or inbreeding is provided, not both
+  if (!is.null(average_inbreeding) && !is.null(inbreeding)) {
+    stop(
+      "`average_inbreeding` and `inbreeding` must not both be provided.",
+      call. = FALSE
+    )
+  }
+  # check that inbreeding is provided with bootstrap = TRUE instead of average_inbreeding
+  if (isTRUE(bootstrap) && !is.null(average_inbreeding)) {
     stop(
       "`inbreeding` (one value per animal) must be provided instead of ",
-      "`average_F` when `bootstrap = TRUE`, so that the average ",
+      "`average_inbreeding` when `bootstrap = TRUE`, so that the average ",
       "inbreeding is recomputed in every resample.",
       call. = FALSE
     )
@@ -381,7 +385,7 @@ validate_lr <- function(
       n_boot = n_boot,
       ncpus = ncpus,
       var_a = var_a,
-      average_F = average_F
+      average_inbreeding = average_inbreeding
     )
     stats_df["n", "SE"] <- NA_real_ # n (a fixed value) has no sampling error
   } else {
@@ -391,7 +395,7 @@ validate_lr <- function(
         data,
         seq_len(nrow(data)),
         var_a = var_a,
-        average_F = average_F
+        average_inbreeding = average_inbreeding
       )
     )
   }
@@ -487,11 +491,16 @@ validate_lr <- function(
 #'   `inbreeding`.
 #' @param indices Row indices of the (re)sample.
 #' @param var_a Optional additive genetic variance.
-#' @param average_F Optional average inbreeding, used only when `data` has no
-#'   `inbreeding` column.
+#' @param average_inbreeding Optional average inbreeding, used only when `data`
+#'   has no `inbreeding` column.
 #' @return Named numeric vector.
 #' @noRd
-.lr_stats <- function(data, indices, var_a = NULL, average_F = NULL) {
+.lr_stats <- function(
+  data,
+  indices,
+  var_a = NULL,
+  average_inbreeding = NULL
+) {
   # EBVs of the (re)sampled animals
   p <- data$partial[indices]
   w <- data$whole[indices]
@@ -506,13 +515,13 @@ validate_lr <- function(
   out["dispersion_bias"] <- cov_pw / stats::var(p)
 
   # average inbreeding of the (resampled) animals when it is a column
-  avg_F <- if ("inbreeding" %in% names(data)) {
+  avg_inbreeding <- if ("inbreeding" %in% names(data)) {
     mean(data$inbreeding[indices])
   } else {
-    average_F
+    average_inbreeding
   }
-  if (!is.null(var_a) && !is.null(avg_F)) {
-    ratio <- cov_pw / ((1 - avg_F) * var_a)
+  if (!is.null(var_a) && !is.null(avg_inbreeding)) {
+    ratio <- cov_pw / ((1 - avg_inbreeding) * var_a)
     # set ratio to NaN for edge cases (negative covariance or average inbreeding >= 1)
     # avoid sqrt()'s warning, which would otherwise be triggered on every resample
     out["accuracy_partial"] <- if (is.finite(ratio) && ratio >= 0) {
@@ -520,7 +529,7 @@ validate_lr <- function(
     } else {
       NaN
     }
-    out["average_F"] <- avg_F
+    out["average_inbreeding"] <- avg_inbreeding
     out["var_a"] <- var_a
   }
 
