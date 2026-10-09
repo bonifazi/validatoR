@@ -1,5 +1,8 @@
 # validatoR (development version)
 
+## New features
+- added `group` and `plot_subgroups` to `validate_prediction()`
+
 ## Improvements
 - error messages follow one pattern: argument name first, then "must"
 

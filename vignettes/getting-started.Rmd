@@ -285,6 +285,22 @@ res_rmse$stats
 res_rmse$plot
 ```
 
+As in `validate_lr()`, `plot_subgroups = TRUE` colours the points by group. Here
+`group` is a vector with one label per animal, in the same order as the data.
+The statistics do not change.
+
+```{r prediction-group}
+res_pred_group <- validate_prediction(
+  prediction = toy_validation$partial,
+  target = toy_validation$pheno,
+  h2 = 0.3,
+  group = toy_validation$group,
+  plot = TRUE,
+  plot_subgroups = TRUE
+)
+res_pred_group$plot
+```
+
 ## Messages and errors
 
 The functions stop with a message when an input cannot be used. `validate_lr()`

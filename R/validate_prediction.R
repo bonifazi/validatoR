@@ -26,10 +26,17 @@
 #' @param var_a Optional single positive number: the additive genetic variance.
 #'   When provided, the root mean squared error in genetic standard deviations,
 #'   `rmse_in_GSD`, is also returned. Defaults to `NULL`.
+#' @param group Optional vector (character, factor or numeric) with the group
+#'   of each animal, with the same length and order as `prediction` and
+#'   `target`. Used by `plot_subgroups`; it does not change the statistics.
+#'   Defaults to `NULL`.
 #' @param plot Logical. If `TRUE`, also return a ggplot2 scatter plot of
 #'   `target` on `prediction`, with a grey line of slope 1 and a blue line of
 #'   the fitted regression. The axis labels are generic; relabel them by adding
 #'   `+ ggplot2::labs(x = ..., y = ...)`. Defaults to `FALSE`.
+#' @param plot_subgroups Logical. If `TRUE` (and `plot = TRUE`), colour the
+#'   points by `group`, which helps to spot heterogeneous groups. It needs
+#'   `group`. Defaults to `FALSE`.
 #' @inheritParams validate_lr
 #'
 #' @details
@@ -125,15 +132,27 @@
 #'   plot = TRUE
 #' )
 #' res_plot$plot
+#'
+#' # colour the points by cohort, useful to spot a group that behaves differently
+#' validate_prediction(
+#'   toy_validation$partial,
+#'   toy_validation$pheno,
+#'   h2 = 0.3,
+#'   group = toy_validation$group,
+#'   plot = TRUE,
+#'   plot_subgroups = TRUE
+#' )$plot
 validate_prediction <- function(
   prediction,
   target,
   h2 = NULL,
   var_a = NULL,
+  group = NULL,
   bootstrap = FALSE,
   n_boot = 10000L,
   ncpus = 1L,
-  plot = FALSE
+  plot = FALSE,
+  plot_subgroups = FALSE
 ) {
   # 1. input checks
   if (!is.numeric(prediction) || !is.numeric(target)) {
@@ -161,6 +180,27 @@ validate_prediction <- function(
   # check that flags are a single TRUE or FALSE
   .check_flag(bootstrap, "bootstrap")
   .check_flag(plot, "plot")
+  .check_flag(plot_subgroups, "plot_subgroups")
+  # check that group is a vector with one label per animal
+  if (
+    !is.null(group) &&
+      !(is.atomic(group) &&
+        is.null(dim(group)) &&
+        length(group) == length(prediction))
+  ) {
+    stop(
+      "`group` must be a vector with the same length as `prediction` and ",
+      "`target`.",
+      call. = FALSE
+    )
+  }
+  # check that plot_subgroups = TRUE comes with group
+  if (isTRUE(plot_subgroups) && is.null(group)) {
+    stop(
+      "`group` must be provided when `plot_subgroups = TRUE`.",
+      call. = FALSE
+    )
+  }
   # check the bootstrap settings
   .check_n_boot(n_boot)
   .check_ncpus(ncpus)
@@ -228,7 +268,9 @@ validate_prediction <- function(
 
   # 4. (optional) plot
   p <- if (isTRUE(plot)) {
-    .plot_general(data, stats_df)
+    # colour the points by group only when asked for
+    plot_group <- if (isTRUE(plot_subgroups)) group else NULL
+    .plot_general(data, stats_df, group = plot_group)
   } else {
     NULL
   }
@@ -282,15 +324,26 @@ validate_prediction <- function(
 #' @param data Data frame with columns `prediction` and `target`.
 #' @param stats_df Output of the statistics step, with rows `slope` and
 #'   `intercept`.
+#' @param group Optional vector with one group label per row of `data`; the
+#'   points are coloured by it. `NULL` gives no colours.
 #' @return A ggplot object.
 #' @importFrom ggplot2 .data
 #' @noRd
-.plot_general <- function(data, stats_df) {
+.plot_general <- function(data, stats_df, group = NULL) {
+  # colour the points by group when labels are provided
+  if (is.null(group)) {
+    mapping <- ggplot2::aes(x = .data$prediction, y = .data$target)
+  } else {
+    data$group <- as.factor(group)
+    mapping <- ggplot2::aes(
+      x = .data$prediction,
+      y = .data$target,
+      colour = .data$group
+    )
+  }
+
   # scatter plot with the slope-1 line and the fitted regression
-  p <- ggplot2::ggplot(
-    data,
-    ggplot2::aes(x = .data$prediction, y = .data$target)
-  ) +
+  p <- ggplot2::ggplot(data, mapping) +
     ggplot2::geom_point(alpha = 0.5) +
     ggplot2::geom_abline(slope = 1, intercept = 0, colour = "grey50") +
     ggplot2::geom_abline(
@@ -301,5 +354,10 @@ validate_prediction <- function(
     ggplot2::labs(x = "Prediction", y = "Target") +
     ggplot2::theme_bw() +
     ggplot2::theme(aspect.ratio = 1)
+
+  # the colour label only exists when there is a colour aesthetic
+  if (!is.null(group)) {
+    p <- p + ggplot2::labs(colour = "Group")
+  }
   return(p)
 }

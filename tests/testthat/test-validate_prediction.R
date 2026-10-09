@@ -212,7 +212,8 @@ test_that("bootstrap is reproducible with a seed", {
 
 # ----------------------------------------------------------------------------
 # Block 4. Plot
-# Tests: plot = TRUE returns a ggplot that can be built.
+# Tests: plot = TRUE returns a ggplot that can be built, and the points are
+# coloured by group only with plot_subgroups.
 # ----------------------------------------------------------------------------
 
 test_that("plot = TRUE returns a ggplot that can be built", {
@@ -224,6 +225,67 @@ test_that("plot = TRUE returns a ggplot that can be built", {
 
   expect_s3_class(res$plot, "ggplot")
   expect_no_error(ggplot2::ggplot_build(res$plot))
+})
+
+test_that("plot_subgroups colours the points by group", {
+  res <- validate_prediction(
+    toy_validation$partial,
+    toy_validation$whole,
+    group = toy_validation$group,
+    plot = TRUE,
+    plot_subgroups = TRUE
+  )
+
+  expect_s3_class(res$plot, "ggplot")
+  expect_equal(res$plot$labels$colour, "Group")
+
+  # one colour per group (toy_validation has 4 cohorts)
+  built <- ggplot2::ggplot_build(res$plot)
+  expect_length(unique(built$data[[1]]$colour), nlevels(toy_validation$group))
+})
+
+test_that("without plot_subgroups the points are not coloured", {
+  # group alone does not colour the plot
+  res <- validate_prediction(
+    toy_validation$partial,
+    toy_validation$whole,
+    group = toy_validation$group,
+    plot = TRUE
+  )
+
+  expect_null(res$plot$labels$colour)
+  built <- ggplot2::ggplot_build(res$plot)
+  expect_length(unique(built$data[[1]]$colour), 1L)
+})
+
+test_that("group does not change the statistics", {
+  plain <- validate_prediction(toy_validation$partial, toy_validation$pheno)
+  grouped <- validate_prediction(
+    toy_validation$partial,
+    toy_validation$pheno,
+    group = toy_validation$group,
+    plot = TRUE,
+    plot_subgroups = TRUE
+  )
+  expect_equal(grouped$stats, plain$stats)
+
+  # also with the bootstrap, with the same seed
+  set.seed(1)
+  plain_boot <- validate_prediction(
+    toy_validation$partial,
+    toy_validation$pheno,
+    bootstrap = TRUE,
+    n_boot = 20
+  )
+  set.seed(1)
+  grouped_boot <- validate_prediction(
+    toy_validation$partial,
+    toy_validation$pheno,
+    group = toy_validation$group,
+    bootstrap = TRUE,
+    n_boot = 20
+  )
+  expect_equal(grouped_boot$stats, plain_boot$stats)
 })
 
 # ----------------------------------------------------------------------------
@@ -316,6 +378,37 @@ test_that("bootstrap and plot must be a single TRUE or FALSE", {
     "bootstrap"
   )
   expect_error(validate_prediction(x, y, plot = "yes"), "plot")
+  expect_error(
+    validate_prediction(x, y, plot_subgroups = NA),
+    "`plot_subgroups` must be TRUE or FALSE.",
+    fixed = TRUE
+  )
+})
+
+test_that("group must have one label per animal, and plot_subgroups needs it", {
+  x <- toy_validation$partial
+  y <- toy_validation$whole
+
+  # plot_subgroups = TRUE without group
+  expect_error(
+    validate_prediction(x, y, plot = TRUE, plot_subgroups = TRUE),
+    "`group` must be provided when `plot_subgroups = TRUE`.",
+    fixed = TRUE
+  )
+
+  # group of the wrong length, or not a vector
+  msg <- "`group` must be a vector with the same length as `prediction` and `target`."
+  expect_error(validate_prediction(x, y, group = 1:3), msg, fixed = TRUE)
+  expect_error(
+    validate_prediction(x, y, group = list(1, 2)),
+    msg,
+    fixed = TRUE
+  )
+  expect_error(
+    validate_prediction(x, y, group = matrix(1, nrow(toy_validation), 1)),
+    msg,
+    fixed = TRUE
+  )
 })
 
 test_that("n_boot must be a single whole number of at least 2", {

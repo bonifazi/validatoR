@@ -9,10 +9,12 @@ validate_prediction(
   target,
   h2 = NULL,
   var_a = NULL,
+  group = NULL,
   bootstrap = FALSE,
   n_boot = 10000L,
   ncpus = 1L,
-  plot = FALSE
+  plot = FALSE,
+  plot_subgroups = FALSE
 )
 }
 \arguments{
@@ -33,6 +35,11 @@ validated on their own records. Defaults to \code{NULL}.}
 When provided, the root mean squared error in genetic standard deviations,
 \code{rmse_in_GSD}, is also returned. Defaults to \code{NULL}.}
 
+\item{group}{Optional vector (character, factor or numeric) with the group
+of each animal, with the same length and order as \code{prediction} and
+\code{target}. Used by \code{plot_subgroups}; it does not change the statistics.
+Defaults to \code{NULL}.}
+
 \item{bootstrap}{Logical. If \code{TRUE}, standard errors are estimated by
 bootstrapping over animals with replacement. Defaults to \code{FALSE}.}
 
@@ -46,6 +53,10 @@ for the bootstrap. Defaults to \code{1}, which runs serially.}
 \code{target} on \code{prediction}, with a grey line of slope 1 and a blue line of
 the fitted regression. The axis labels are generic; relabel them by adding
 \code{+ ggplot2::labs(x = ..., y = ...)}. Defaults to \code{FALSE}.}
+
+\item{plot_subgroups}{Logical. If \code{TRUE} (and \code{plot = TRUE}), colour the
+points by \code{group}, which helps to spot heterogeneous groups. It needs
+\code{group}. Defaults to \code{FALSE}.}
 }
 \value{
 A list with two elements, \code{stats} and \code{plot}.
@@ -150,6 +161,16 @@ res_plot <- validate_prediction(
   plot = TRUE
 )
 res_plot$plot
+
+# colour the points by cohort, useful to spot a group that behaves differently
+validate_prediction(
+  toy_validation$partial,
+  toy_validation$pheno,
+  h2 = 0.3,
+  group = toy_validation$group,
+  plot = TRUE,
+  plot_subgroups = TRUE
+)$plot
 }
 \seealso{
 \code{\link[=validate_lr]{validate_lr()}} to compare a partial with a whole evaluation using
