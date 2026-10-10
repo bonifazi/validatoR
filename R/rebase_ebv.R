@@ -23,7 +23,8 @@
 #'   on). It must have exactly as many values as there are EBV columns.
 #'   Provide either `base_pop` or `constant_value`, not both. Defaults to `NULL`.
 #' @param plot Logical. If `TRUE`, also return a ggplot2 scatter plot of the
-#'   rebased EBVs on the original EBVs for each column. Defaults to `FALSE`.
+#'   rebased EBVs on the original EBVs for each column, with dotted lines at the
+#'   mean of each. Defaults to `FALSE`.
 #' @param verbose Logical. If `TRUE`, report with messages the number of animals
 #'   and, per column, what was subtracted (and, with `base_pop`, the mean EBV of
 #'   the base population before and after rebasing). Defaults to `FALSE`.
@@ -278,6 +279,8 @@ rebase_ebv <- function(
 #'
 #' Grey line: slope 1 reference. Blue line: regression of the rebased on the
 #' original EBVs, whose intercept is minus the value that was subtracted.
+#' Dotted lines: the mean of the original EBVs (vertical) and of the rebased
+#' EBVs (horizontal).
 #'
 #' @param original EBVs before rebasing.
 #' @param rebased EBVs after rebasing, in the same order.
@@ -300,6 +303,17 @@ rebase_ebv <- function(
       slope = fit[[2]],
       intercept = fit[[1]],
       colour = "blue"
+    ) +
+    # dotted lines at the mean of the original EBVs (vertical) and of the rebased EBVs (horizontal)
+    ggplot2::geom_vline(
+      xintercept = mean(plot_data$original),
+      linetype = "dotted",
+      colour = "grey30"
+    ) +
+    ggplot2::geom_hline(
+      yintercept = mean(plot_data$rebased),
+      linetype = "dotted",
+      colour = "grey30"
     ) +
     ggplot2::labs(x = "Original EBV", y = "Rebased EBV", title = title) +
     ggplot2::theme_bw()

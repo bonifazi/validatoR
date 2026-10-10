@@ -9,6 +9,7 @@
 
 ## Improvements
 - standardised the error messages: argument name first, then "must"
+- added dotted lines at the means of the original and the rebased EBVs to the plots of `rebase_ebv()`
 
 ## Bug fixes
 - fixed `validate_prediction()` so that it gives its own error message when `h2` is `NA`
@@ -18,6 +19,7 @@
 - documented `inc_acc` as in Bonifazi et al. (2022), with the percentage conversion
 - explained why validatoR and how to install a specific release in the README
 - listed `rebase_ebv()` first in the README and the vignette
+- documented validating groups of animals in the README and the vignette
 
 ## Internal
 - added tests for error messages and `ncpus`

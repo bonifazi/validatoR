@@ -364,8 +364,8 @@ test_that("verbose = TRUE reports the animals and the subtracted values", {
 
 # ----------------------------------------------------------------------------
 # Block 5. Plot
-# Tests: The list with the plots, the regression line of each plot, and no
-# ggplot2 deprecations.
+# Tests: The list with the plots, the regression line and the dotted lines at
+# the means of each plot, and no ggplot2 deprecations.
 # ----------------------------------------------------------------------------
 
 test_that("plot = TRUE returns the data and one plot per EBV column", {
@@ -397,6 +397,18 @@ test_that("the blue line has slope 1 and intercept minus the subtracted value", 
   expect_equal(line_partial$intercept, -100)
   expect_equal(line_whole$slope, 1)
   expect_equal(line_whole$intercept, -90)
+})
+
+test_that("the plots have dotted lines at the means of the EBVs", {
+  res <- rebase_ebv(ebv, base_pop = base_df, plot = TRUE)
+  # layers 4 and 5 come after the points and the two lines: vertical, horizontal
+  vertical <- res$plots$partial$layers[[4]]
+  horizontal <- res$plots$partial$layers[[5]]
+
+  expect_s3_class(vertical$geom, "GeomVline")
+  expect_s3_class(horizontal$geom, "GeomHline")
+  expect_equal(vertical$data$xintercept, mean(ebv$partial))
+  expect_equal(horizontal$data$yintercept, mean(res$rebased_ebv$partial))
 })
 
 test_that("the plots build without ggplot2 deprecations", {

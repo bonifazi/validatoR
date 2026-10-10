@@ -27,6 +27,7 @@ explains only what is specific to the package.
 |:---------|:---------|:----|
 | EBVs expressed on different bases | EBVs on a common base, before you compare or validate them | `rebase_ebv()` |
 | Two evaluations of the same animals: a partial one, which leaves out the records of the validation animals, and a whole one, which uses all records | The level bias, the dispersion bias, the accuracy of the partial EBVs (the LR method), and the ratio of accuracies | `validate_lr()` |
+| Two evaluations as above, and groups of animals such as cohorts, herds or sexes | The same statistics for each group, in one table | `validate_lr_by_group()` |
 | Predictions and a target to validate them with: pre-corrected phenotypes, true breeding values from a simulation, or other EBVs | The correlation, the regression of the target on the prediction, the mean difference and the MSE, and the accuracy when the target is a pre-corrected phenotype | `validate_prediction()` |
 
 The validation animals are the animals whose EBVs you validate, for example the
@@ -85,7 +86,7 @@ the columns of your data. So here the plot of the column called `partial` is
 plot shows the rebased EBVs against the original ones: the points stay on a line
 of slope 1, shifted by the value subtracted.
 
-```{r rebase-constant}
+```{r rebase-constant, fig.alt = "Scatter plot of the rebased EBVs against the original EBVs. The points lie on a straight line of slope 1, shifted down by the value subtracted, so the correlation and the slope stay 1. Dotted lines mark the mean of each."}
 rebased_constant <- rebase_ebv(ebv, constant_value = c(100, 90), plot = TRUE)
 head(rebased_constant$rebased_ebv, 3)
 # the plot of the column called "partial"
@@ -188,7 +189,7 @@ point is an animal. The grey line has slope 1, and the blue line is the
 regression of the whole EBVs on the partial EBVs, so its slope is the
 dispersion bias.
 
-```{r lr-plot}
+```{r lr-plot, fig.alt = "Scatter plot of the whole EBVs against the partial EBVs, with a grey line of slope 1 and a blue regression line."}
 res_plot <- validate_lr(partial, whole, plot = TRUE)
 res_plot$plot
 ```
@@ -197,7 +198,7 @@ With `var_a`, `plot_in_gsd = TRUE` draws both axes in genetic standard
 deviations, and `plot_verbose = TRUE` adds the number of animals as a subtitle
 and the main statistics as a caption.
 
-```{r lr-plot-gsd}
+```{r lr-plot-gsd, fig.alt = "Scatter plot of the whole against the partial EBVs with both axes in genetic standard deviations, with the number of animals as a subtitle and the main statistics as a caption."}
 res_gsd <- validate_lr(
   partial,
   whole,
@@ -217,7 +218,7 @@ with the IDs of the validation animals in column 1 and, optionally, a group
 label in column 2. `plot_subgroups = TRUE` colours the points by that label,
 which helps to spot a group that behaves differently.
 
-```{r lr-group}
+```{r lr-group, fig.alt = "Scatter plot of the whole against the partial EBVs for the animals of cohorts 1 and 2, with the points coloured by cohort."}
 # the validation animals: the animals of cohorts 1 and 2, labelled by cohort
 val_group <- toy_validation[
   toy_validation$group %in% c("cohort_1", "cohort_2"),
@@ -234,6 +235,64 @@ res_group <- validate_lr(
 res_group$stats
 res_group$plot
 ```
+
+### Several groups at once
+
+To validate each group of animals on its own, use `validate_lr_by_group()`. It
+takes the same arguments as `validate_lr()`, plus a table, `groups`: the animal
+IDs in column 1 and one column per group. A logical column has `TRUE` for the
+animals in the group. A text column has a label for the animals in the group
+and `NA` for the rest. An animal can be in several groups.
+
+```{r lr-by-group}
+# one column per group: two cohorts as logical columns, and the cohorts as labels
+groups <- data.frame(
+  id = toy_validation$id,
+  cohort_1 = toy_validation$group == "cohort_1",
+  cohort_2 = toy_validation$group == "cohort_2",
+  cohort = toy_validation$group
+)
+
+res_by_group <- validate_lr_by_group(partial, whole, groups, var_a = 300)
+```
+
+The messages show each group as it runs and a summary at the end. The result
+has a `groups` table, with one row for each group, and the statistics of all
+groups in one long table:
+
+```{r lr-by-group-tables}
+res_by_group$groups
+res_by_group$stats[res_by_group$stats$statistic == "rho", ]
+```
+
+`n_provided` is the number of IDs listed in the group, and `n` is the number of
+animals used, which are the listed animals found in both evaluations. A group
+that cannot be validated, for example with fewer than 3 animals, does not stop
+the others. Its status is "failed" and its message says why.
+
+The first group, `all`, is every animal found in both evaluations, whether or
+not it is in a group. Its numbers are those of a plain `validate_lr()` call.
+Use `include_all = FALSE` to leave it out.
+
+With `plot = TRUE`, `plots` has one plot for each group. With
+`plot_subgroups = TRUE`, the points of a text column are coloured by its labels.
+Because the plots are in a list, you can assemble them yourself, for example
+with `patchwork::wrap_plots(res$plots)`.
+
+```{r lr-by-group-plots, fig.alt = "Scatter plot of the whole against the partial EBVs for all animals, with the points coloured by cohort."}
+res_plots <- validate_lr_by_group(
+  partial,
+  whole,
+  groups,
+  plot = TRUE,
+  plot_subgroups = TRUE,
+  verbose = FALSE
+)
+res_plots$plots$cohort
+```
+
+With `split_labels = TRUE`, each label of a text column also becomes a group of
+its own, named `cohort: cohort_1`, `cohort: cohort_2`, and so on.
 
 ## Predictions against a target
 
@@ -274,7 +333,7 @@ With `var_a`, `rmse_in_GSD` gives the RMSE in genetic standard deviations. This
 function also takes `bootstrap = TRUE` and `plot = TRUE`, which draws the target
 against the prediction:
 
-```{r prediction-rmse}
+```{r prediction-rmse, fig.alt = "Scatter plot of the target on the prediction, with a grey line of slope 1 and a blue regression line."}
 res_rmse <- validate_prediction(
   prediction = toy_validation$partial,
   target = toy_validation$whole,
@@ -289,7 +348,7 @@ As in `validate_lr()`, `plot_subgroups = TRUE` colours the points by group. Here
 `group` is a vector with one label per animal, in the same order as the data.
 The statistics do not change.
 
-```{r prediction-group}
+```{r prediction-group, fig.alt = "Scatter plot of the phenotype on the partial EBVs, with the points coloured by cohort."}
 res_pred_group <- validate_prediction(
   prediction = toy_validation$partial,
   target = toy_validation$pheno,
@@ -314,7 +373,7 @@ res_left_out <- validate_lr(partial[1:1990, ], whole)
 ## Further reading
 
 Each function has a help page that describes every argument: `?rebase_ebv`,
-`?validate_lr` and `?validate_prediction`.
+`?validate_lr`, `?validate_lr_by_group` and `?validate_prediction`.
 
 The LR method is described in Legarra, A. and Reverter, A. (2018). Semi-parametric
 estimates of population accuracy and bias of predictions of breeding values and

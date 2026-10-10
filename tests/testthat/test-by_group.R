@@ -339,7 +339,11 @@ test_that(".by_group says group and not groups for a single group", {
   msgs <- capture_messages(.by_group(units_ok["a"], fake_run, verbose = TRUE))
 
   expect_match(msgs[1], "Validating 1 group with", fixed = TRUE)
-  expect_true(any(grepl("1 group: 1 ok, 0 with warnings, 0 failed.", msgs, fixed = TRUE)))
+  expect_true(any(grepl(
+    "1 group: 1 ok, 0 with warnings, 0 failed.",
+    msgs,
+    fixed = TRUE
+  )))
 })
 
 test_that(".by_group numbers each group as it runs", {

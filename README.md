@@ -50,6 +50,7 @@ analyses, species and traits, and studies.
 |:---|:---|
 | EBVs on different bases that must be put on the same base before you compare or validate them | `rebase_ebv()` |
 | An earlier (“partial”) and a later (“whole”) evaluation of the same animals, and you want the level bias, the dispersion bias, accuracy of the partial EBVs (the LR method), and ratio of accuracies | `validate_lr()` |
+| The same two evaluations, and you want the LR statistics for each group of animals (cohort, herd, sex) in one call | `validate_lr_by_group()` |
 | Predictions and a target to validate them with: pre-corrected phenotypes, true breeding values or other EBVs | `validate_prediction()` |
 
 ## Installation

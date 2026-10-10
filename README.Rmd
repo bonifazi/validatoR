@@ -51,6 +51,7 @@ compare results across different analyses, species and traits, and studies.
 |:---------|:----|
 | EBVs on different bases that must be put on the same base before you compare or validate them | `rebase_ebv()` |
 | An earlier ("partial") and a later ("whole") evaluation of the same animals, and you want the level bias, the dispersion bias, accuracy of the partial EBVs (the LR method), and ratio of accuracies | `validate_lr()` |
+| The same two evaluations, and you want the LR statistics for each group of animals (cohort, herd, sex) in one call | `validate_lr_by_group()` |
 | Predictions and a target to validate them with: pre-corrected phenotypes, true breeding values or other EBVs | `validate_prediction()` |
 
 ## Installation
@@ -106,7 +107,7 @@ values (level bias 0.75, dispersion bias 0.90, rho 0.85).
 `validate_lr()` takes one data frame per evaluation, with the animal IDs in the
 first column and the EBVs in the second.
 
-```{r example, fig.width = 5, fig.height = 4.5, out.width = "60%"}
+```{r example, fig.width = 5, fig.height = 4.5, out.width = "60%", fig.alt = "Scatter plot of the whole EBVs against the partial EBVs of the toy data, with a grey line of slope 1 and a blue regression line."}
 library(validatoR)
 
 # get the partial EBV
