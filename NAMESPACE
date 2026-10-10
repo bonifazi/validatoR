@@ -3,5 +3,6 @@
 S3method(print,validatoR_stats)
 export(rebase_ebv)
 export(validate_lr)
+export(validate_lr_by_group)
 export(validate_prediction)
 importFrom(ggplot2,.data)

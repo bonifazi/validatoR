@@ -4,6 +4,7 @@
 - renamed `average_F` to `average_inbreeding` in `validate_lr()`, also in its `stats` table
 
 ## New features
+- added `validate_lr_by_group()` to validate several groups of animals in one call
 - added `group` and `plot_subgroups` to `validate_prediction()`
 
 ## Improvements
@@ -11,6 +12,7 @@
 
 ## Bug fixes
 - `validate_prediction()` gives its own error message when `h2` is `NA`
+- the count `n` is no longer rounded when a `stats` table is printed
 
 ## Documentation
 - documented `inc_acc` as in Bonifazi et al. (2022), with the percentage conversion
@@ -19,6 +21,7 @@
 
 ## Internal
 - added tests for error messages and `ncpus`
+- added tests for the by-group functions
 - added GitHub issue templates
 
 # validatoR 0.0.9
