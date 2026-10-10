@@ -17,9 +17,11 @@
 #'   evaluation in column 2. Other columns are ignored. A data.table or
 #'   a tibble also works.
 #' @param val_group Optional data frame with the IDs of the validation animals
-#'   in column 1 and, optionally, a group label in column 2 (used by
-#'   `plot_subgroups`). Every ID must be present in both `partial` and
-#'   `whole`. Defaults to `NULL`: all animals present in both are used.
+#'   in column 1 and, optionally, a group label in column 2. The statistics are
+#'   computed on all these animals together; the label is only used by
+#'   `plot_subgroups`, to colour the plot. Every ID must be present in both
+#'   `partial` and `whole`. Defaults to `NULL`: all animals present in both are
+#'   used.
 #' @param var_a Optional single positive number: the additive genetic variance.
 #'   Needed for the level bias in genetic standard deviations, for the accuracy
 #'   of the partial EBVs, and for `plot_in_gsd`. Defaults to `NULL`.

@@ -28,7 +28,8 @@ on). It must have exactly as many values as there are EBV columns.
 Provide either \code{base_pop} or \code{constant_value}, not both. Defaults to \code{NULL}.}
 
 \item{plot}{Logical. If \code{TRUE}, also return a ggplot2 scatter plot of the
-rebased EBVs on the original EBVs for each column. Defaults to \code{FALSE}.}
+rebased EBVs on the original EBVs for each column, with dotted lines at the
+mean of each. Defaults to \code{FALSE}.}
 
 \item{verbose}{Logical. If \code{TRUE}, report with messages the number of animals
 and, per column, what was subtracted (and, with \code{base_pop}, the mean EBV of

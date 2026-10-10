@@ -12,6 +12,7 @@ Tools for validating (genomic) prediction models in animal breeding.
 Useful links:
 \itemize{
   \item \url{https://github.com/bonifazi/validatoR}
+  \item \url{https://bonifazi.github.io/validatoR/}
   \item Report bugs at \url{https://github.com/bonifazi/validatoR/issues}
 }
 
