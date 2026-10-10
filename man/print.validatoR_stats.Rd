@@ -22,7 +22,7 @@ significant digits to show. Defaults to \code{4}.}
 Prints the \code{stats} table returned by the validation functions, such as
 \code{\link[=validate_lr]{validate_lr()}} and \code{\link[=validate_prediction]{validate_prediction()}}, with a fixed number of
 significant digits and without scientific notation, for example \code{0.8609} and
-\code{0.00000004922}.
+\code{0.00000004922}. The count \code{n} is always shown in full.
 Only the display changes: the values in the table keep their full
 precision.
 }

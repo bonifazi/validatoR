@@ -92,29 +92,37 @@ test_that("a tiny average inbreeding is kept, not rounded to 0", {
 # the order of the rows.
 # ----------------------------------------------------------------------------
 
+# count the animals in the evaluations, and how many are left out of one of them
+n_all <- nrow(partial_all)
+n_extra <- 10L
+
 test_that("animals found in only one evaluation are reported for each vector", {
-  # partial holds rows 1:1990 and whole rows 11:2000, so 10 animals are only
-  # in `partial` and 10 are only in `whole`
+  # partial misses the last n_extra animals and whole the first n_extra, so
+  # n_extra animals are only in `partial` and n_extra are only in `whole`
+  partial_short <- partial_all[1:(n_all - n_extra), ]
+  whole_short <- whole_all[(n_extra + 1):n_all, ]
   expect_message(
     expect_message(
-      validate_lr(partial_all[1:1990, ], whole_all[11:2000, ]),
-      "10 animal(s) in `partial` are not in `whole`",
+      validate_lr(partial_short, whole_short),
+      paste0(n_extra, " animal(s) in `partial` are not in `whole`"),
       fixed = TRUE
     ),
-    "10 animal(s) in `whole` are not in `partial`",
+    paste0(n_extra, " animal(s) in `whole` are not in `partial`"),
     fixed = TRUE
   )
 })
 
 test_that("only the vector with extra animals gets a message", {
+  partial_short <- partial_all[1:(n_all - n_extra), ]
+  whole_short <- whole_all[1:(n_all - n_extra), ]
   expect_message(
-    validate_lr(partial_all[1:1990, ], whole_all),
-    "10 animal(s) in `whole` are not in `partial`",
+    validate_lr(partial_short, whole_all),
+    paste0(n_extra, " animal(s) in `whole` are not in `partial`"),
     fixed = TRUE
   )
   expect_message(
-    validate_lr(partial_all, whole_all[1:1990, ]),
-    "10 animal(s) in `partial` are not in `whole`",
+    validate_lr(partial_all, whole_short),
+    paste0(n_extra, " animal(s) in `partial` are not in `whole`"),
     fixed = TRUE
   )
 })

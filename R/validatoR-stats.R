@@ -21,7 +21,7 @@
 #' Prints the `stats` table returned by the validation functions, such as
 #' [validate_lr()] and [validate_prediction()], with a fixed number of
 #' significant digits and without scientific notation, for example `0.8609` and
-#' `0.00000004922`.
+#' `0.00000004922`. The count `n` is always shown in full.
 #' Only the display changes: the values in the table keep their full
 #' precision.
 #'
@@ -64,10 +64,12 @@ print.validatoR_stats <- function(x, digits = 4, ...) {
   }
   # format the values for printing, keeping the stored values unchanged
   shown <- as.data.frame(x)
+  # find the row that is a count, which is shown with all its digits
+  is_count <- rownames(shown) == "n"
   shown[] <- lapply(shown, function(column) {
-    return(
-      format(signif(column, digits), scientific = FALSE, drop0trailing = TRUE)
-    )
+    # round the statistics to the significant digits, but not the count
+    rounded <- ifelse(is_count, column, signif(column, digits))
+    return(format(rounded, scientific = FALSE, drop0trailing = TRUE))
   })
   print(shown, ...)
   return(invisible(x))

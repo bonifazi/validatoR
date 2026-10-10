@@ -70,7 +70,7 @@ test_that("printing uses fixed notation with 4 significant digits", {
   shown <- capture.output(print(stats))
 
   expect_false(any(grepl("e[+-][0-9]", shown)))
-  expect_true(any(grepl("^n +2000", shown)))
+  expect_true(any(grepl(paste0("^n +", nrow(toy_validation)), shown)))
   expect_true(any(grepl(
     format(signif(stats["rho", "value"], 4)),
     shown,
@@ -88,6 +88,18 @@ test_that("printing does not turn a tiny value into 0", {
   expect_true(any(grepl("0.00000004922", shown, fixed = TRUE)))
   expect_false(any(grepl("e[+-][0-9]", shown)))
   expect_equal(tiny["average_inbreeding", "value"], 4.922e-08)
+})
+
+test_that("printing does not round the count n, only the statistics", {
+  big <- .new_stats(data.frame(
+    value = c(15432, 0.1234567, 0.8609343),
+    row.names = c("n", "level_bias", "rho")
+  ))
+  shown <- capture.output(print(big))
+
+  # n keeps all its digits (4 significant digits would give 15430)
+  expect_true(any(grepl("^n +15432$", shown)))
+  expect_true(any(grepl("^rho +0.8609$", shown)))
 })
 
 test_that("digits changes the display and is checked", {

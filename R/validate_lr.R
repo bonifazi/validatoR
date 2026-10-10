@@ -176,57 +176,19 @@ validate_lr <- function(
   verbose = FALSE
 ) {
   # 1. flags and scalar arguments
-  .check_flag(plot, "plot")
-  .check_flag(plot_verbose, "plot_verbose")
-  .check_flag(plot_subgroups, "plot_subgroups")
-  .check_flag(plot_in_gsd, "plot_in_gsd")
-  .check_flag(bootstrap, "bootstrap")
-  .check_flag(verbose, "verbose")
-  # check the bootstrap settings
-  .check_n_boot(n_boot)
-  .check_ncpus(ncpus)
-
-  # check for var_a being a single positive number
-  if (!is.null(var_a)) {
-    .check_positive_number(var_a, "var_a")
-  }
-  # check that plot_in_gsd = TRUE comes with var_a
-  if (isTRUE(plot_in_gsd) && is.null(var_a)) {
-    stop(
-      "`var_a` must be provided when `plot_in_gsd = TRUE`.",
-      call. = FALSE
-    )
-  }
-  # check for average_inbreeding being a single number in [0, 1)
-  if (
-    !is.null(average_inbreeding) &&
-      !(is.numeric(average_inbreeding) &&
-        length(average_inbreeding) == 1L &&
-        !is.na(average_inbreeding) &&
-        average_inbreeding >= 0 &&
-        average_inbreeding < 1)
-  ) {
-    stop(
-      "`average_inbreeding` must be a single number in [0, 1).",
-      call. = FALSE
-    )
-  }
-  # check that either average_inbreeding or inbreeding is provided, not both
-  if (!is.null(average_inbreeding) && !is.null(inbreeding)) {
-    stop(
-      "`average_inbreeding` and `inbreeding` must not both be provided.",
-      call. = FALSE
-    )
-  }
-  # check that inbreeding is provided with bootstrap = TRUE instead of average_inbreeding
-  if (isTRUE(bootstrap) && !is.null(average_inbreeding)) {
-    stop(
-      "`inbreeding` (one value per animal) must be provided instead of ",
-      "`average_inbreeding` when `bootstrap = TRUE`, so that the average ",
-      "inbreeding is recomputed in every resample.",
-      call. = FALSE
-    )
-  }
+  .check_lr_arguments(
+    var_a = var_a,
+    average_inbreeding = average_inbreeding,
+    inbreeding = inbreeding,
+    plot = plot,
+    plot_verbose = plot_verbose,
+    plot_subgroups = plot_subgroups,
+    plot_in_gsd = plot_in_gsd,
+    bootstrap = bootstrap,
+    n_boot = n_boot,
+    ncpus = ncpus,
+    verbose = verbose
+  )
 
   # 2. EBVs as (id, value) data frames, merged by ID
   p_df <- .lr_input(partial, "partial")
@@ -439,6 +401,82 @@ validate_lr <- function(
   }
 
   return(list(stats = .new_stats(stats_df), plot = p))
+}
+
+#' Check the flags and scalar arguments of the LR validation
+#'
+#' The checks of `validate_lr()` that do not need the data. They are in their
+#' own function so that `validate_lr_by_group()` runs them once, before the
+#' groups, and a mistake is not reported as a failure of every group.
+#'
+#' @inheritParams validate_lr
+#' @return `NULL`, invisibly. Stops with a message when an argument is wrong.
+#' @noRd
+.check_lr_arguments <- function(
+  var_a,
+  average_inbreeding,
+  inbreeding,
+  plot,
+  plot_verbose,
+  plot_subgroups,
+  plot_in_gsd,
+  bootstrap,
+  n_boot,
+  ncpus,
+  verbose
+) {
+  .check_flag(plot, "plot")
+  .check_flag(plot_verbose, "plot_verbose")
+  .check_flag(plot_subgroups, "plot_subgroups")
+  .check_flag(plot_in_gsd, "plot_in_gsd")
+  .check_flag(bootstrap, "bootstrap")
+  .check_flag(verbose, "verbose")
+  # check the bootstrap settings
+  .check_n_boot(n_boot)
+  .check_ncpus(ncpus)
+
+  # check for var_a being a single positive number
+  if (!is.null(var_a)) {
+    .check_positive_number(var_a, "var_a")
+  }
+  # check that plot_in_gsd = TRUE comes with var_a
+  if (isTRUE(plot_in_gsd) && is.null(var_a)) {
+    stop(
+      "`var_a` must be provided when `plot_in_gsd = TRUE`.",
+      call. = FALSE
+    )
+  }
+  # check for average_inbreeding being a single number in [0, 1)
+  if (
+    !is.null(average_inbreeding) &&
+      !(is.numeric(average_inbreeding) &&
+        length(average_inbreeding) == 1L &&
+        !is.na(average_inbreeding) &&
+        average_inbreeding >= 0 &&
+        average_inbreeding < 1)
+  ) {
+    stop(
+      "`average_inbreeding` must be a single number in [0, 1).",
+      call. = FALSE
+    )
+  }
+  # check that either average_inbreeding or inbreeding is provided, not both
+  if (!is.null(average_inbreeding) && !is.null(inbreeding)) {
+    stop(
+      "`average_inbreeding` and `inbreeding` must not both be provided.",
+      call. = FALSE
+    )
+  }
+  # check that inbreeding is provided with bootstrap = TRUE instead of average_inbreeding
+  if (isTRUE(bootstrap) && !is.null(average_inbreeding)) {
+    stop(
+      "`inbreeding` (one value per animal) must be provided instead of ",
+      "`average_inbreeding` when `bootstrap = TRUE`, so that the average ",
+      "inbreeding is recomputed in every resample.",
+      call. = FALSE
+    )
+  }
+  return(invisible(NULL))
 }
 
 #' Turn an ID + value input into a two-column data frame
