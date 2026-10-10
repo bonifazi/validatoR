@@ -8,15 +8,15 @@
 #'   group. The column name is the name of the group. A column is either
 #'   logical (`TRUE` for the animals in the group, `FALSE` or `NA` for the
 #'   rest) or text (a label for the animals in the group, `NA` for the rest).
-#'   Text columns that only holds "TRUE" and "FALSE" is read as logical.
+#'   Text columns that only hold "TRUE" and "FALSE" are read as logical.
 #'   An animal can be in several groups by being labelled in different columns.
 #' @param split_labels Logical. If `TRUE`, each label of a text column is also
 #'   run as a group of its own, named `column: label`, next to the group of the
 #'   whole column (see the example under Groups in the details). Defaults to
 #'   `FALSE`.
 #' @param include_all Logical. If `TRUE`, the group `"all"` is also run, with
-#'   all animals found in both `partial` and `whole`. Only when `TRUE`, no
-#'   column of `groups` can be named `"all"`. Defaults to `TRUE`.
+#'   all animals found in both `partial` and `whole`. If `TRUE`, no column of
+#'   `groups` can be named `"all"`. Defaults to `TRUE`.
 #' @param plot Logical. If `TRUE`, also build a ggplot2 scatter plot of the
 #'   whole EBVs on the partial EBVs for each group. Defaults to `FALSE`.
 #' @param plot_subgroups Logical. If `TRUE`, the points of a group from a text
@@ -55,21 +55,21 @@
 #' animals together (the group `"all"`) is not wanted, for example to save time
 #' with the bootstrap.
 #'
-#' # Errors and warnings
-#' A group that stops with an error gets the status "failed" and its message
-#' is stored in `groups`. Other groups will still run. A group that finishes with
-#' warnings gets "warning", keeps its statistics, and its warnings are stored in
-#' `message`.
-#' When any group needs attention from the user, one warning at the end names
-#' these groups.
-#'
 #' # Variance and inbreeding
 #' One variance `var_a` and one set of inbreeding values are used for all groups.
 #'
-#' # IDs
+#' # IDs, errors and warnings
 #' IDs are compared as text, so numeric and text IDs match. IDs in a group that
 #' are not in both `partial` and `whole` are counted in `n_provided` but not
-#' used. The IDs of `groups` must be unique and not missing.
+#' used. The IDs of `groups` must be unique and not missing, and so must the
+#' names of its group columns. With `split_labels = TRUE`, no column can be
+#' named like a group that this adds (`column: label`).
+#'
+#' A group that stops with an error gets the status "failed" and its message
+#' is stored in `groups`. Other groups will still run. A group that finishes with
+#' warnings gets "warning", keeps its statistics, and its warnings are stored in
+#' `message`. When any group needs attention from the user, one warning at the
+#' end names these groups.
 #'
 #' @examples
 #' p <- toy_validation[, c("id", "partial")]
@@ -113,8 +113,7 @@ validate_lr_by_group <- function(
   # 1. check flags and arguments
   .check_flag(split_labels, "split_labels")
   .check_flag(include_all, "include_all")
-  # check the arguments that every group passes on to validate_lr(), once
-  # this avoids that a mistake is not reported as the failure of every group
+  # check the arguments that every group passes on to validate_lr(), once, so that a mistake is reported once and not as the failure of every group
   .check_lr_arguments(
     var_a = var_a,
     average_inbreeding = average_inbreeding,

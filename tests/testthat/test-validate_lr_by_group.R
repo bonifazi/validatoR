@@ -205,7 +205,7 @@ test_that("split_labels adds a group for each label of a text column", {
       "cohort_1",
       "cohort_2",
       "cohort",
-      paste0("cohort: cohort_", 1:4)
+      paste0("cohort: ", sort(unique(as.character(toy_validation$group))))
     )
   )
   # the group of one label has the same animals as the logical column
@@ -231,6 +231,30 @@ test_that("an animal can be in several groups", {
   expect_identical(res$groups$status, rep("ok", 3))
   # count the animals in both groups once for each group, so the two group sizes together are larger than the number of different animals in the two groups
   expect_gt(sum(res$groups$n[2:3]), sum(overlap$a | overlap$b))
+})
+
+test_that("IDs of a group that are in no evaluation are counted but not used", {
+  # add three IDs to cohort_1 that are neither in partial nor in whole
+  extra <- data.frame(
+    id = paste0("x", 1:3),
+    cohort_1 = TRUE,
+    cohort_2 = FALSE,
+    cohort = NA
+  )
+  res <- validate_lr_by_group(
+    p,
+    w,
+    rbind(groups, extra),
+    var_a = 300,
+    verbose = FALSE
+  )
+  row <- res$groups[res$groups$group == "cohort_1", ]
+
+  expect_equal(row$n_provided, sum(groups$cohort_1) + 3)
+  expect_equal(row$n, sum(groups$cohort_1))
+  expect_identical(row$status, "ok")
+  # the statistics are those of the animals that could be used
+  expect_equal(group_values(res, "cohort_1")[["n"]], sum(groups$cohort_1))
 })
 
 # ----------------------------------------------------------------------------

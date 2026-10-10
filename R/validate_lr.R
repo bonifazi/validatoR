@@ -425,6 +425,7 @@ validate_lr <- function(
   ncpus,
   verbose
 ) {
+  # check that the logical flags are single TRUE or FALSE values
   .check_flag(plot, "plot")
   .check_flag(plot_verbose, "plot_verbose")
   .check_flag(plot_subgroups, "plot_subgroups")

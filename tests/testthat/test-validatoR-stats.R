@@ -61,8 +61,9 @@ test_that("the values can be read in the usual ways", {
 
 # ----------------------------------------------------------------------------
 # Block 2. Printing
-# Tests: Fixed notation and significant digits, tiny values, the digits
-# argument, extra arguments, the invisible return, and the bootstrap SE column.
+# Tests: Fixed notation and significant digits, tiny values, the count n shown
+# in full, the digits argument, extra arguments, the invisible return, and the
+# bootstrap SE column.
 # ----------------------------------------------------------------------------
 
 test_that("printing uses fixed notation with 4 significant digits", {

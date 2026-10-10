@@ -36,7 +36,7 @@ a tibble also works.}
 group. The column name is the name of the group. A column is either
 logical (\code{TRUE} for the animals in the group, \code{FALSE} or \code{NA} for the
 rest) or text (a label for the animals in the group, \code{NA} for the rest).
-Text columns that only holds "TRUE" and "FALSE" is read as logical.
+Text columns that only hold "TRUE" and "FALSE" are read as logical.
 An animal can be in several groups by being labelled in different columns.}
 
 \item{var_a}{Optional single positive number: the additive genetic variance.
@@ -61,8 +61,8 @@ whole column (see the example under Groups in the details). Defaults to
 \code{FALSE}.}
 
 \item{include_all}{Logical. If \code{TRUE}, the group \code{"all"} is also run, with
-all animals found in both \code{partial} and \code{whole}. Only when \code{TRUE}, no
-column of \code{groups} can be named \code{"all"}. Defaults to \code{TRUE}.}
+all animals found in both \code{partial} and \code{whole}. If \code{TRUE}, no column of
+\code{groups} can be named \code{"all"}. Defaults to \code{TRUE}.}
 
 \item{plot}{Logical. If \code{TRUE}, also build a ggplot2 scatter plot of the
 whole EBVs on the partial EBVs for each group. Defaults to \code{FALSE}.}
@@ -132,23 +132,22 @@ animals together (the group \code{"all"}) is not wanted, for example to save tim
 with the bootstrap.
 }
 
-\section{Errors and warnings}{
-A group that stops with an error gets the status "failed" and its message
-is stored in \code{groups}. Other groups will still run. A group that finishes with
-warnings gets "warning", keeps its statistics, and its warnings are stored in
-\code{message}.
-When any group needs attention from the user, one warning at the end names
-these groups.
-}
-
 \section{Variance and inbreeding}{
 One variance \code{var_a} and one set of inbreeding values are used for all groups.
 }
 
-\section{IDs}{
+\section{IDs, errors and warnings}{
 IDs are compared as text, so numeric and text IDs match. IDs in a group that
 are not in both \code{partial} and \code{whole} are counted in \code{n_provided} but not
-used. The IDs of \code{groups} must be unique and not missing.
+used. The IDs of \code{groups} must be unique and not missing, and so must the
+names of its group columns. With \code{split_labels = TRUE}, no column can be
+named like a group that this adds (\code{column: label}).
+
+A group that stops with an error gets the status "failed" and its message
+is stored in \code{groups}. Other groups will still run. A group that finishes with
+warnings gets "warning", keeps its statistics, and its warnings are stored in
+\code{message}. When any group needs attention from the user, one warning at the
+end names these groups.
 }
 
 \examples{

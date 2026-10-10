@@ -8,11 +8,11 @@
 - added `group` and `plot_subgroups` to `validate_prediction()`
 
 ## Improvements
-- error messages follow one pattern: argument name first, then "must"
+- standardised the error messages: argument name first, then "must"
 
 ## Bug fixes
-- `validate_prediction()` gives its own error message when `h2` is `NA`
-- the count `n` is no longer rounded when a `stats` table is printed
+- fixed `validate_prediction()` so that it gives its own error message when `h2` is `NA`
+- stopped rounding the count `n` when a `stats` table is printed
 
 ## Documentation
 - documented `inc_acc` as in Bonifazi et al. (2022), with the percentage conversion

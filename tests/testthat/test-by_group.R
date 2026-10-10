@@ -111,6 +111,18 @@ test_that("split_labels keeps the labels in the group of the whole column", {
   expect_named(units$`genotyped: male`$members, "id")
 })
 
+test_that("split_labels keeps a label whose animals cannot be used", {
+  # the only animal with the label "other" is A7, which is not in ids_all
+  other <- groups
+  other$genotyped[7] <- "other"
+  units <- .read_groups(other, ids_all, split_labels = TRUE)
+
+  expect_true("genotyped: other" %in% names(units))
+  expect_equal(units$`genotyped: other`$n_provided, 1)
+  expect_equal(units$`genotyped: other`$n, 0)
+  expect_equal(nrow(units$`genotyped: other`$members), 0)
+})
+
 test_that("split_labels = FALSE adds no group for single labels", {
   units <- .read_groups(groups, ids_all, split_labels = FALSE)
 
@@ -152,6 +164,23 @@ test_that(".read_groups reports the column of an empty group name", {
     "Missing or empty name in column(s): 3",
     fixed = TRUE
   )
+})
+
+test_that(".read_groups reports a column named like a split-label group", {
+  clash <- data.frame(
+    id = ids_all,
+    genotyped = c("male", "female", NA, "male", "female", NA),
+    "genotyped: male" = TRUE,
+    check.names = FALSE
+  )
+
+  expect_error(
+    .read_groups(clash, ids_all, split_labels = TRUE),
+    "`groups` has a column named `genotyped: male`",
+    fixed = TRUE
+  )
+  # without split_labels the two column names are different, so there is no clash
+  expect_no_error(.read_groups(clash, ids_all, split_labels = FALSE))
 })
 
 test_that(".read_groups needs logical or text columns", {
@@ -304,6 +333,13 @@ test_that(".by_group starts with a header naming the function and the groups", {
     "Validating 2 groups with fake_run(): a, d",
     fixed = TRUE
   )
+})
+
+test_that(".by_group says group and not groups for a single group", {
+  msgs <- capture_messages(.by_group(units_ok["a"], fake_run, verbose = TRUE))
+
+  expect_match(msgs[1], "Validating 1 group with", fixed = TRUE)
+  expect_true(any(grepl("1 group: 1 ok, 0 with warnings, 0 failed.", msgs, fixed = TRUE)))
 })
 
 test_that(".by_group numbers each group as it runs", {

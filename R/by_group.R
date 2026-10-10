@@ -66,11 +66,11 @@
   for (name in group_names) {
     # get values of this group column: TRUE/FALSE or labels, one per animal
     col <- groups[[name]]
-    # factors are read as text
+    # convert factors to text
     if (is.factor(col)) {
       col <- as.character(col)
     }
-    # text that only holds "TRUE" and "FALSE" is read as logical
+    # convert text that only holds "TRUE" and "FALSE" to logical
     if (is.character(col) && all(col[!is.na(col)] %in% c("TRUE", "FALSE"))) {
       col <- as.logical(col)
     }
@@ -83,7 +83,7 @@
         call. = FALSE
       )
     }
-    # members are defined as: TRUE for a logical column, or any label for a text column
+    # find the members: the TRUE values of a logical column, or any label of a text column
     if (is.logical(col)) {
       is_member <- col %in% TRUE
       labels <- NULL
@@ -99,18 +99,35 @@
     if (!is.null(labels)) {
       members$label <- labels[keep]
     }
+    # store the members and the counts of the group as a unit
     units[[name]] <- list(
       members = members,
       n_provided = sum(is_member),
       n = sum(keep)
     )
-    # when the statistics are split by label, each label of a text column is added as a unit of its own
+    # add each label of a text column as a unit of its own when split_labels is TRUE
     if (isTRUE(split_labels) && !is.null(labels)) {
-      # loop over the unique labels of the group column, sorted alphabetically
-      for (lab in sort(unique(labels[keep]))) {
-        # members of the group that have this label
+      # loop over the unique labels of the group column, sorted alphabetically, including labels whose animals cannot be used
+      for (lab in sort(unique(labels[is_member]))) {
+        # name the group of this label, and check that no column already has that name
+        label_name <- paste0(name, ": ", lab)
+        if (label_name %in% group_names) {
+          stop(
+            "`groups` has a column named `",
+            label_name,
+            "`, which is also the name of the group that `split_labels = TRUE` ",
+            "makes for the label `",
+            lab,
+            "` of column `",
+            name,
+            "`. Rename the column.",
+            call. = FALSE
+          )
+        }
+        # find the members of the group that have this label
         in_label <- is_member & labels %in% lab
-        units[[paste0(name, ": ", lab)]] <- list(
+        # store the members and the counts of this label as a unit
+        units[[label_name]] <- list(
           members = data.frame(
             id = group_ids[in_label & keep],
             stringsAsFactors = FALSE
@@ -126,7 +143,7 @@
 
 #' Run one function per group and collect the results
 #'
-#' This wrapper function runs a given function on each group and collects the results.
+#' This function runs `run_one` on each group and collects the results.
 #' A failing group never stops the other groups. The error or the warnings of a
 #' group are kept in the `groups` table, and a single warning at the end names
 #' the groups that need attention.
@@ -152,6 +169,12 @@
 ) {
   # initialize one status and one message per group (empty text for now), and empty lists for the statistics and the plots
   n_units <- length(units)
+  # choose the word for the number of groups, so that one group is not called "1 groups"
+  if (n_units == 1L) {
+    groups_word <- "group"
+  } else {
+    groups_word <- "groups"
+  }
   group_status <- character(n_units)
   group_message <- character(n_units)
   stats_by_group <- list()
@@ -180,7 +203,9 @@
     message(
       "Validating ",
       n_units,
-      " groups with ",
+      " ",
+      groups_word,
+      " with ",
       core_name,
       ": ",
       group_names,
@@ -214,9 +239,7 @@
       error = function(e) e
     )
 
-    # store the status of the group: whether it failed, finished with warnings, or finished cleanly
-    # there are three labels: "failed", "warning" and "ok".
-    # The message is the error or the warnings, or empty when everything is ok.
+    # store the status of the group (failed, warning or ok) and its message, which is the error or the warnings and is empty when the status is ok
     if (inherits(group_result, "error")) {
       group_status[i] <- "failed"
       group_message[i] <- conditionMessage(group_result)
@@ -231,11 +254,10 @@
       message("  ", group_status[i], ": ", group_message[i])
     }
 
-    # store the statistics and the plot of the group, if they exist
-    # statistics and plot exist unless the group failed
+    # store the statistics and the plot of the group, unless the group failed
     if (group_status[i] != "failed") {
       group_stats <- as.data.frame(group_result$stats)
-      # SE only exists with the bootstrap called (set to NA when not called)
+      # add an SE column of NA when the bootstrap was not run, because SE only exists with the bootstrap
       if (!"SE" %in% names(group_stats)) {
         group_stats$SE <- NA_real_
       }
@@ -254,7 +276,7 @@
     }
   }
 
-  # create a long table of statistics, if every group failed the table is empty
+  # combine the statistics of all groups into one long table, or create an empty table when every group failed
   if (length(stats_by_group) > 0L) {
     all_groups_stats <- do.call(rbind, stats_by_group)
   } else {
@@ -283,7 +305,9 @@
   # create the summary text that counts the outcomes of all groups
   summary_text <- paste0(
     n_units,
-    " groups: ",
+    " ",
+    groups_word,
+    ": ",
     sum(group_status == "ok"),
     " ok, ",
     sum(group_status == "warning"),
