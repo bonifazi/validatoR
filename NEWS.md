@@ -20,6 +20,9 @@
 - explained why validatoR and how to install a specific release in the README
 - listed `rebase_ebv()` first in the README and the vignette
 - documented validating groups of animals in the README and the vignette
+- added a website with the guide, the help pages and the news, at https://bonifazi.github.io/validatoR/
+- added alt-text to the figures in the README and the vignette
+- clarified in the vignette what each statistic is expected to be
 
 ## Internal
 - added tests for error messages and `ncpus`

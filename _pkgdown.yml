@@ -1,6 +1,17 @@
 url: https://bonifazi.github.io/validatoR/
 template:
   bootstrap: 5
+  includes:
+    in_header: |
+      <style>
+      /* put the contents panel on the left of the article, on wide screens */
+      @media (min-width: 768px) {
+        .template-article > .row { flex-direction: row-reverse; }
+      }
+      /* show with an arrow which sections have subsections */
+      #toc li > a.nav-link:has(+ ul)::after { content: " \25B8"; opacity: 0.6; }
+      #toc li > a.nav-link.active:has(+ ul)::after { content: " \25BE"; opacity: 0.8; }
+      </style>
 
 navbar:
   structure:
