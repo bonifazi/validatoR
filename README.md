@@ -110,9 +110,9 @@ install.packages("validatoR_0.0.9.zip", repos = NULL, type = "win.binary")
 
 `toy_validation` ships together with the package. It has 2,000 simulated
 animals with the EBVs of a partial and a whole evaluation, built so that
-the statistics have known values (level bias 0.75, dispersion bias 0.90,
-rho 0.85). `validate_lr()` takes one data frame per evaluation, with the
-animal IDs in the first column and the EBVs in the second.
+the statistics have known values (level bias = 0.75, dispersion bias =
+0.90, rho = 0.85). `validate_lr()` takes one data frame per evaluation,
+with the animal IDs in the first column and the EBVs in the second.
 
 ``` r
 library(validatoR)
@@ -133,7 +133,7 @@ res$stats # view the statistics
 res$plot # view the plot
 ```
 
-<img src="man/figures/README-example-1.png" width="60%" />
+<img src="man/figures/README-example-1.png" alt="Scatter plot of the whole EBVs against the partial EBVs of the toy data, with a grey line of slope 1 and a blue regression line." width="60%" />
 
 No bias means a level bias of 0 and a dispersion bias of 1. In this
 example, the partial EBVs are over-dispersed, as simulated.
