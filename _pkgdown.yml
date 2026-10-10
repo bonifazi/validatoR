@@ -1,0 +1,26 @@
+url: https://bonifazi.github.io/validatoR/
+template:
+  bootstrap: 5
+
+navbar:
+  structure:
+    left: [intro, reference, articles, news, downloads]
+    right: [search, github]
+  components:
+    downloads:
+      text: Downloads
+      href: https://github.com/bonifazi/validatoR/releases
+
+reference:
+  - title: Rebase EBVs
+    contents: rebase_ebv
+  - title: Validate predictions
+    contents:
+      - validate_lr
+      - validate_lr_by_group
+      - validate_prediction
+  - title: Print the results
+    contents: print.validatoR_stats
+  - title: Data
+    contents: toy_validation
+

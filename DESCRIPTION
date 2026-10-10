@@ -7,7 +7,7 @@ Authors@R:
 Description: Tools for validating (genomic) prediction models in animal
     breeding.
 License: MIT + file LICENSE
-URL: https://github.com/bonifazi/validatoR
+URL: https://github.com/bonifazi/validatoR, https://bonifazi.github.io/validatoR/
 BugReports: https://github.com/bonifazi/validatoR/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
