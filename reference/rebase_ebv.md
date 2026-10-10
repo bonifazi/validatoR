@@ -44,7 +44,8 @@ rebase_ebv(
 - plot:
 
   Logical. If `TRUE`, also return a ggplot2 scatter plot of the rebased
-  EBVs on the original EBVs for each column. Defaults to `FALSE`.
+  EBVs on the original EBVs for each column, with dotted lines at the
+  mean of each. Defaults to `FALSE`.
 
 - verbose:
 

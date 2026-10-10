@@ -9,7 +9,15 @@ that the base population has a mean EBV of 0. This is done for each EBV
 column of data, each with its own corresponding base-population mean.
 Alternatively, a fixed constant_value is subtracted from all EBVs (one per column).
 Optionally, scatter plots of the rebased EBVs on the original EBVs are
-returned."></head><body>
+returned."><style>
+/* put the contents panel on the left of the article, on wide screens */
+@media (min-width: 768px) {
+  .template-article > .row { flex-direction: row-reverse; }
+}
+/* show with an arrow which sections have subsections */
+#toc li > a.nav-link:has(+ ul)::after { content: " \25B8"; opacity: 0.6; }
+#toc li > a.nav-link.active:has(+ ul)::after { content: " \25BE"; opacity: 0.8; }
+</style></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -94,7 +102,8 @@ Provide either <code>base_pop</code> or <code>constant_value</code>, not both. D
 
 <dt id="arg-plot">plot<a class="anchor" aria-label="anchor" href="#arg-plot"></a></dt>
 <dd><p>Logical. If <code>TRUE</code>, also return a ggplot2 scatter plot of the
-rebased EBVs on the original EBVs for each column. Defaults to <code>FALSE</code>.</p></dd>
+rebased EBVs on the original EBVs for each column, with dotted lines at the
+mean of each. Defaults to <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>

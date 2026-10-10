@@ -137,13 +137,13 @@ res$stats # view the statistics
 The result is a list with `stats`, the table above, and `plot`. The rows
 of `stats` are:
 
-| Row | Meaning | Value if unbiased |
+| Row | Meaning | Expectation |
 |:---|:---|:---|
-| `n` | Number of validation animals |  |
-| `level_bias` | Mean of the partial EBVs minus mean of the whole EBVs | 0 |
-| `dispersion_bias` | Slope of the regression of the whole EBVs on the partial EBVs | 1\. Below 1 the partial EBVs are over-dispersed relative to the whole EBVs (or the whole EBVs are under-dispersed), above 1 the reverse |
-| `rho` | Correlation between the partial and the whole EBVs, the ratio of their accuracies | Close to 1 |
-| `inc_acc` | `1 / rho`, the increase in accuracy obtained with the whole evaluation, as a ratio to the accuracy of the partial evaluation | 1 means no gain |
+| `n` | Number of validation animals: the animals found in both the partial and the whole evaluation, or the animals of `val_group` when it is provided |  |
+| `level_bias` | Mean of the partial EBVs minus mean of the whole EBVs | Expected to be 0 if the partial EBVs are unbiased |
+| `dispersion_bias` | Slope of the regression of the whole EBVs on the partial EBVs | Expected to be 1 if the partial EBVs are unbiased. Below 1 the partial EBVs are over-dispersed relative to the whole EBVs (or the whole EBVs are under-dispersed), above 1 the reverse |
+| `rho` | Correlation between the partial and the whole EBVs, the ratio of their accuracies | rho = 1 means no gain in accuracy when moving from the partial to the whole evaluation |
+| `inc_acc` | `1 / rho`, the increase in accuracy obtained with the whole evaluation, as a ratio to the accuracy of the partial evaluation |  |
 
 In the example, the level bias is 0.75, the dispersion bias is 0.9 and
 rho is 0.85, exactly the values that were simulated. The partial EBVs
@@ -158,10 +158,8 @@ when moving from the partial to the whole evaluation.
 Legarra and Reverter (2018) suggest checking the level bias and the
 dispersion first, and comparing accuracies only for evaluations that are
 approximately unbiased, because the accuracy statistics rely on
-unbiasedness. In a small or related validation set, the dispersion bias
-is expected to fall below 1 even when the EBVs are correct (0.94 in the
-paper’s example of 100 animals in half-sib families of 10), so use large
-validation sets, several hundred animals or more.
+unbiasedness. If possible, use large validation sets of several hundred
+animals or more.
 
 ### Accuracy of the partial EBVs
 
@@ -200,8 +198,8 @@ With `bootstrap = TRUE` the validation animals are resampled with
 replacement and every statistic is recomputed in each resample. The `SE`
 column is the standard deviation of each statistic across the resamples,
 and an approximate 95% interval is the estimate plus or minus two
-standard errors. The default is 10000 resamples; 200 keep this vignette
-fast.
+standard errors. The default is 10,000 resamples and here is 200 just to
+keep this vignette fast.
 
 ``` r
 
@@ -267,15 +265,24 @@ genetic standard deviations, with the number of animals as a subtitle
 and the main statistics as a
 caption.](getting-started_files/figure-html/lr-plot-gsd-1.png)
 
-### Validation group
+### Choosing the validation animals
 
 By default,
 [`validate_lr()`](https://bonifazi.github.io/validatoR/reference/validate_lr.md)
-uses all animals found in both data frames. To validate a subset, such
-as the youngest animals, pass `val_group`: a data frame with the IDs of
-the validation animals in column 1 and, optionally, a group label in
-column 2. `plot_subgroups = TRUE` colours the points by that label,
-which helps to spot a group that behaves differently.
+uses all animals found in both data frames. Often you want to validate
+only some animals, such as the youngest selection candidates. To do
+that, pass `val_group`: a data frame with the IDs of the validation
+animals in column 1 and, optionally, a label in column 2.
+
+The statistics are computed once, on all the animals of `val_group`
+together. Before you trust one set of statistics, it is reccomended to
+check that the validation group is homogeneous, that is, that its
+animals behave alike. To help with this, you can label the animals in
+column 2 of `val_group`, for example by cohort or by sex, then setting
+`plot_subgroups = TRUE` colours the points by that label, so you can see
+whether one subgroup differs from the others. If the group is not
+homogeneous, you may want to validate its subgroups separately. The next
+section shows how.
 
 ``` r
 
@@ -304,18 +311,33 @@ res_group$plot
 
 ![Scatter plot of the whole against the partial EBVs for the animals of
 cohorts 1 and 2, with the points coloured by
-cohort.](getting-started_files/figure-html/lr-group-1.png)
+cohort.](getting-started_files/figure-html/lr-group-1.png) In this
+example, the two cohorts behave alike.
 
-### Several groups at once
+### Validate several groups at once
 
-To validate each group of animals on its own, use
-[`validate_lr_by_group()`](https://bonifazi.github.io/validatoR/reference/validate_lr_by_group.md).
+Sometimes you want to monitor several groups of animals and see whether
+the validation differs between them: all animals, the young animals, the
+genotyped and the non-genotyped animals, different ages, sexes, or
+lines. A bias that is hidden in the whole population may only show up in
+one of these groups.
+[`validate_lr_by_group()`](https://bonifazi.github.io/validatoR/reference/validate_lr_by_group.md)
+runs the validation for each group in one call and returns the results
+of all groups in one table, so you do not have to repeat
+[`validate_lr()`](https://bonifazi.github.io/validatoR/reference/validate_lr.md)
+for each group yourself.
+
 It takes the same arguments as
 [`validate_lr()`](https://bonifazi.github.io/validatoR/reference/validate_lr.md),
-plus a table, `groups`: the animal IDs in column 1 and one column per
-group. A logical column has `TRUE` for the animals in the group. A text
-column has a label for the animals in the group and `NA` for the rest.
-An animal can be in several groups.
+plus a table, `groups`. This table contains the animal IDs in column 1
+and one column per each group you want to validate. There are two types
+of columns you can define: logical and text. A logical column has `TRUE`
+for the animals in the group. A text column has a label for the animals
+in the group and `NA` for the rest. Note that an animal can be in
+several groups.
+
+In this example, we define two logical columns, one for each cohort, and
+a text column with the cohort labels (either cohort_1 or cohort_2).
 
 ``` r
 
@@ -327,6 +349,7 @@ groups <- data.frame(
   cohort = toy_validation$group
 )
 
+# run the validation for all groups at once
 res_by_group <- validate_lr_by_group(partial, whole, groups, var_a = 300)
 #> Validating 4 groups with validate_lr(): all, cohort_1, cohort_2, cohort
 #> [1/4] all
@@ -365,8 +388,8 @@ res_by_group$stats[res_by_group$stats$statistic == "rho", ]
 `n_provided` is the number of IDs listed in the group, and `n` is the
 number of animals used, which are the listed animals found in both
 evaluations. A group that cannot be validated, for example with fewer
-than 3 animals, does not stop the others. Its status is “failed” and its
-message says why.
+than 3 animals, does not stop the others from being validated. Its
+status is “failed” and its message says why.
 
 The first group, `all`, is every animal found in both evaluations,
 whether or not it is in a group. Its numbers are those of a plain

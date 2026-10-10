@@ -12,6 +12,12 @@ with, and it will return the bias, the dispersion, the correlation and
 the accuracy, with bootstrap standard errors and a plot if you want
 them.
 
+The documentation is on the website,
+<https://bonifazi.github.io/validatoR/>: the [Getting
+started](https://bonifazi.github.io/validatoR/articles/getting-started.html)
+guide with plots, a page for each function, and the news. You can read
+it without installing the package.
+
 ## Why validatoR?
 
 New genomic models, genotypes, omics data and traits all need large
@@ -131,9 +137,11 @@ line is the regression of the whole EBVs on the partial EBVs.
 
 ## Learn more
 
-The `getting-started` vignette walks you through each function step by
-step, with standard errors, plots and validation groups. You can view it
-by running:
+The [Getting
+started](https://bonifazi.github.io/validatoR/articles/getting-started.html)
+guide on the website walks you through each function step by step, with
+standard errors, plots and validation groups. Once the package is
+installed, the same guide is also available in R:
 
 ``` r
 
@@ -141,11 +149,14 @@ vignette("getting-started", package = "validatoR")
 ```
 
 As for any R package, each function comes with its own help page with
-every argument explained:
-[`?rebase_ebv`](https://bonifazi.github.io/validatoR/reference/rebase_ebv.md),
-[`?validate_lr`](https://bonifazi.github.io/validatoR/reference/validate_lr.md)
+every argument explained, in R
+([`?rebase_ebv`](https://bonifazi.github.io/validatoR/reference/rebase_ebv.md),
+[`?validate_lr`](https://bonifazi.github.io/validatoR/reference/validate_lr.md),
+[`?validate_lr_by_group`](https://bonifazi.github.io/validatoR/reference/validate_lr_by_group.md)
 and
-[`?validate_prediction`](https://bonifazi.github.io/validatoR/reference/validate_prediction.md).
+[`?validate_prediction`](https://bonifazi.github.io/validatoR/reference/validate_prediction.md))
+and on the
+[website](https://bonifazi.github.io/validatoR/reference/index.html).
 
 What changed between versions is listed in
 [NEWS.md](https://bonifazi.github.io/validatoR/NEWS.md).

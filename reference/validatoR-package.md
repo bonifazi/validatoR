@@ -8,6 +8,8 @@ Useful links:
 
 - <https://github.com/bonifazi/validatoR>
 
+- <https://bonifazi.github.io/validatoR/>
+
 - Report bugs at <https://github.com/bonifazi/validatoR/issues>
 
 ## Author

@@ -9,7 +9,15 @@ validate_lr() and validate_prediction(), with a fixed number of
 significant digits and without scientific notation, for example 0.8609 and
 0.00000004922. The count n is always shown in full.
 Only the display changes: the values in the table keep their full
-precision."></head><body>
+precision."><style>
+/* put the contents panel on the left of the article, on wide screens */
+@media (min-width: 768px) {
+  .template-article > .row { flex-direction: row-reverse; }
+}
+/* show with an arrow which sections have subsections */
+#toc li > a.nav-link:has(+ ul)::after { content: " \25B8"; opacity: 0.6; }
+#toc li > a.nav-link.active:has(+ ul)::after { content: " \25BE"; opacity: 0.8; }
+</style></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 

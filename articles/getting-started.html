@@ -11,6 +11,15 @@
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Getting started with validatoR">
+<style>
+/* put the contents panel on the left of the article, on wide screens */
+@media (min-width: 768px) {
+  .template-article > .row { flex-direction: row-reverse; }
+}
+/* show with an arrow which sections have subsections */
+#toc li > a.nav-link:has(+ ul)::after { content: " \25B8"; opacity: 0.6; }
+#toc li > a.nav-link.active:has(+ ul)::after { content: " \25BE"; opacity: 0.8; }
+</style>
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -74,9 +83,9 @@ run, and it explains only what is specific to the package.</p>
 </h2>
 <table class="table">
 <colgroup>
-<col width="40%">
-<col width="40%">
-<col width="20%">
+<col width="44%">
+<col width="48%">
+<col width="7%">
 </colgroup>
 <thead><tr class="header">
 <th align="left">You have</th>
@@ -225,40 +234,43 @@ by ID.</p>
 <code>plot</code>. The rows of <code>stats</code> are:</p>
 <table class="table">
 <colgroup>
-<col width="15%">
-<col width="27%">
-<col width="57%">
+<col width="4%">
+<col width="41%">
+<col width="53%">
 </colgroup>
 <thead><tr class="header">
 <th align="left">Row</th>
 <th align="left">Meaning</th>
-<th align="left">Value if unbiased</th>
+<th align="left">Expectation</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td align="left"><code>n</code></td>
-<td align="left">Number of validation animals</td>
+<td align="left">Number of validation animals: the animals found in both
+the partial and the whole evaluation, or the animals of
+<code>val_group</code> when it is provided</td>
 <td align="left"></td>
 </tr>
 <tr class="even">
 <td align="left"><code>level_bias</code></td>
 <td align="left">Mean of the partial EBVs minus mean of the whole
 EBVs</td>
-<td align="left">0</td>
+<td align="left">Expected to be 0 if the partial EBVs are unbiased</td>
 </tr>
 <tr class="odd">
 <td align="left"><code>dispersion_bias</code></td>
 <td align="left">Slope of the regression of the whole EBVs on the
 partial EBVs</td>
-<td align="left">1. Below 1 the partial EBVs are over-dispersed relative
-to the whole EBVs (or the whole EBVs are under-dispersed), above 1 the
-reverse</td>
+<td align="left">Expected to be 1 if the partial EBVs are unbiased.
+Below 1 the partial EBVs are over-dispersed relative to the whole EBVs
+(or the whole EBVs are under-dispersed), above 1 the reverse</td>
 </tr>
 <tr class="even">
 <td align="left"><code>rho</code></td>
 <td align="left">Correlation between the partial and the whole EBVs, the
 ratio of their accuracies</td>
-<td align="left">Close to 1</td>
+<td align="left">rho = 1 means no gain in accuracy when moving from the
+partial to the whole evaluation</td>
 </tr>
 <tr class="odd">
 <td align="left"><code>inc_acc</code></td>
@@ -266,7 +278,7 @@ ratio of their accuracies</td>
 <code>1 / rho</code>, the increase in accuracy obtained
 with the whole evaluation, as a ratio to the accuracy of the partial
 evaluation</td>
-<td align="left">1 means no gain</td>
+<td align="left"></td>
 </tr>
 </tbody>
 </table>
@@ -282,10 +294,8 @@ evaluation.</p>
 <p>Legarra and Reverter (2018) suggest checking the level bias and the
 dispersion first, and comparing accuracies only for evaluations that are
 approximately unbiased, because the accuracy statistics rely on
-unbiasedness. In a small or related validation set, the dispersion bias
-is expected to fall below 1 even when the EBVs are correct (0.94 in the
-paper’s example of 100 animals in half-sib families of 10), so use large
-validation sets, several hundred animals or more.</p>
+unbiasedness. If possible, use large validation sets of several hundred
+animals or more.</p>
 <div class="section level3">
 <h3 id="accuracy-of-the-partial-ebvs">Accuracy of the partial EBVs<a class="anchor" aria-label="anchor" href="#accuracy-of-the-partial-ebvs"></a>
 </h3>
@@ -322,8 +332,8 @@ if you only have that.</p>
 resampled with replacement and every statistic is recomputed in each
 resample. The <code>SE</code> column is the standard deviation of each
 statistic across the resamples, and an approximate 95% interval is the
-estimate plus or minus two standard errors. The default is 10000
-resamples; 200 keep this vignette fast.</p>
+estimate plus or minus two standard errors. The default is 10,000
+resamples and here is 200 just to keep this vignette fast.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># make the resamples reproducible</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
@@ -375,14 +385,22 @@ subtitle and the main statistics as a caption.</p>
 <p><img src="getting-started_files/figure-html/lr-plot-gsd-1.png" class="r-plt" alt="Scatter plot of the whole against the partial EBVs with both axes in genetic standard deviations, with the number of animals as a subtitle and the main statistics as a caption." width="576" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level3">
-<h3 id="validation-group">Validation group<a class="anchor" aria-label="anchor" href="#validation-group"></a>
+<h3 id="choosing-the-validation-animals">Choosing the validation animals<a class="anchor" aria-label="anchor" href="#choosing-the-validation-animals"></a>
 </h3>
 <p>By default, <code><a href="../reference/validate_lr.html">validate_lr()</a></code> uses all animals found in both
-data frames. To validate a subset, such as the youngest animals, pass
-<code>val_group</code>: a data frame with the IDs of the validation
-animals in column 1 and, optionally, a group label in column 2.
-<code>plot_subgroups = TRUE</code> colours the points by that label,
-which helps to spot a group that behaves differently.</p>
+data frames. Often you want to validate only some animals, such as the
+youngest selection candidates. To do that, pass <code>val_group</code>:
+a data frame with the IDs of the validation animals in column 1 and,
+optionally, a label in column 2.</p>
+<p>The statistics are computed once, on all the animals of
+<code>val_group</code> together. Before you trust one set of statistics,
+it is reccomended to check that the validation group is homogeneous,
+that is, that its animals behave alike. To help with this, you can label
+the animals in column 2 of <code>val_group</code>, for example by cohort
+or by sex, then setting <code>plot_subgroups = TRUE</code> colours the
+points by that label, so you can see whether one subgroup differs from
+the others. If the group is not homogeneous, you may want to validate
+its subgroups separately. The next section shows how.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># the validation animals: the animals of cohorts 1 and 2, labelled by cohort</span></span>
 <span><span class="va">val_group</span> <span class="op">&lt;-</span> <span class="va">toy_validation</span><span class="op">[</span></span>
@@ -405,18 +423,30 @@ which helps to spot a group that behaves differently.</p>
 <span><span class="co">#&gt; rho               0.8543</span></span>
 <span><span class="co">#&gt; inc_acc            1.171</span></span>
 <span><span class="va">res_group</span><span class="op">$</span><span class="va">plot</span></span></code></pre></div>
-<p><img src="getting-started_files/figure-html/lr-group-1.png" class="r-plt" alt="Scatter plot of the whole against the partial EBVs for the animals of cohorts 1 and 2, with the points coloured by cohort." width="576" style="display: block; margin: auto;"></p>
+<p><img src="getting-started_files/figure-html/lr-group-1.png" class="r-plt" alt="Scatter plot of the whole against the partial EBVs for the animals of cohorts 1 and 2, with the points coloured by cohort." width="576" style="display: block; margin: auto;">
+In this example, the two cohorts behave alike.</p>
 </div>
 <div class="section level3">
-<h3 id="several-groups-at-once">Several groups at once<a class="anchor" aria-label="anchor" href="#several-groups-at-once"></a>
+<h3 id="validate-several-groups-at-once">Validate several groups at once<a class="anchor" aria-label="anchor" href="#validate-several-groups-at-once"></a>
 </h3>
-<p>To validate each group of animals on its own, use
-<code><a href="../reference/validate_lr_by_group.html">validate_lr_by_group()</a></code>. It takes the same arguments as
-<code><a href="../reference/validate_lr.html">validate_lr()</a></code>, plus a table, <code>groups</code>: the
-animal IDs in column 1 and one column per group. A logical column has
+<p>Sometimes you want to monitor several groups of animals and see
+whether the validation differs between them: all animals, the young
+animals, the genotyped and the non-genotyped animals, different ages,
+sexes, or lines. A bias that is hidden in the whole population may only
+show up in one of these groups. <code><a href="../reference/validate_lr_by_group.html">validate_lr_by_group()</a></code> runs
+the validation for each group in one call and returns the results of all
+groups in one table, so you do not have to repeat
+<code><a href="../reference/validate_lr.html">validate_lr()</a></code> for each group yourself.</p>
+<p>It takes the same arguments as <code><a href="../reference/validate_lr.html">validate_lr()</a></code>, plus a
+table, <code>groups</code>. This table contains the animal IDs in column
+1 and one column per each group you want to validate. There are two
+types of columns you can define: logical and text. A logical column has
 <code>TRUE</code> for the animals in the group. A text column has a
-label for the animals in the group and <code>NA</code> for the rest. An
-animal can be in several groups.</p>
+label for the animals in the group and <code>NA</code> for the rest.
+Note that an animal can be in several groups.</p>
+<p>In this example, we define two logical columns, one for each cohort,
+and a text column with the cohort labels (either cohort_1 or
+cohort_2).</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># one column per group: two cohorts as logical columns, and the cohorts as labels</span></span>
 <span><span class="va">groups</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -426,6 +456,7 @@ animal can be in several groups.</p>
 <span>  cohort <span class="op">=</span> <span class="va">toy_validation</span><span class="op">$</span><span class="va">group</span></span>
 <span><span class="op">)</span></span>
 <span></span>
+<span><span class="co"># run the validation for all groups at once</span></span>
 <span><span class="va">res_by_group</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/validate_lr_by_group.html">validate_lr_by_group</a></span><span class="op">(</span><span class="va">partial</span>, <span class="va">whole</span>, <span class="va">groups</span>, var_a <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Validating 4 groups with validate_lr(): all, cohort_1, cohort_2, cohort</span></span>
 <span><span class="co">#&gt; [1/4] all</span></span>
@@ -458,8 +489,8 @@ the statistics of all groups in one long table:</p>
 <p><code>n_provided</code> is the number of IDs listed in the group, and
 <code>n</code> is the number of animals used, which are the listed
 animals found in both evaluations. A group that cannot be validated, for
-example with fewer than 3 animals, does not stop the others. Its status
-is “failed” and its message says why.</p>
+example with fewer than 3 animals, does not stop the others from being
+validated. Its status is “failed” and its message says why.</p>
 <p>The first group, <code>all</code>, is every animal found in both
 evaluations, whether or not it is in a group. Its numbers are those of a
 plain <code><a href="../reference/validate_lr.html">validate_lr()</a></code> call. Use
@@ -509,8 +540,8 @@ target, and so on.</p>
 <span><span class="co">#&gt; accuracy       0.5196</span></span></code></pre></div>
 <table class="table">
 <colgroup>
-<col width="35%">
-<col width="64%">
+<col width="13%">
+<col width="86%">
 </colgroup>
 <thead><tr class="header">
 <th align="left">Row</th>

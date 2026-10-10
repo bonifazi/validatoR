@@ -44,9 +44,11 @@ validate_lr(
 - val_group:
 
   Optional data frame with the IDs of the validation animals in column 1
-  and, optionally, a group label in column 2 (used by `plot_subgroups`).
-  Every ID must be present in both `partial` and `whole`. Defaults to
-  `NULL`: all animals present in both are used.
+  and, optionally, a group label in column 2. The statistics are
+  computed on all these animals together; the label is only used by
+  `plot_subgroups`, to colour the plot. Every ID must be present in both
+  `partial` and `whole`. Defaults to `NULL`: all animals present in both
+  are used.
 
 - var_a:
 

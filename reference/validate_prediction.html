@@ -13,7 +13,15 @@ EBVs from a more complete or different evaluation. Returns the correlation,
 the regression of the target on the prediction (slope and intercept), the
 mean difference, and the mean squared error (MSE) and its square root (RMSE).
 Optionally, standard errors are estimated by bootstrapping over animals, and
-a scatter plot of the target on the predictions is returned."></head><body>
+a scatter plot of the target on the predictions is returned."><style>
+/* put the contents panel on the left of the article, on wide screens */
+@media (min-width: 768px) {
+  .template-article > .row { flex-direction: row-reverse; }
+}
+/* show with an arrow which sections have subsections */
+#toc li > a.nav-link:has(+ ul)::after { content: " \25B8"; opacity: 0.6; }
+#toc li > a.nav-link.active:has(+ ul)::after { content: " \25BE"; opacity: 0.8; }
+</style></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 

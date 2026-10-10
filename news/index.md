@@ -40,6 +40,10 @@
   [`rebase_ebv()`](https://bonifazi.github.io/validatoR/reference/rebase_ebv.md)
   first in the README and the vignette
 - documented validating groups of animals in the README and the vignette
+- added a website with the guide, the help pages and the news, at
+  <https://bonifazi.github.io/validatoR/>
+- added alt-text to the figures in the README and the vignette
+- clarified in the vignette what each statistic is expected to be
 
 ### Internal
 

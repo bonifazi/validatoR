@@ -7,7 +7,15 @@ a scatter plot of the whole EBVs on the partial EBVs is returned.'><meta propert
 comparing EBVs from a "partial" evaluation with EBVs from a "whole"
 evaluation, for a group of validation animals (the "focal group").
 Optionally, standard errors are estimated by bootstrapping over animals, and
-a scatter plot of the whole EBVs on the partial EBVs is returned.'></head><body>
+a scatter plot of the whole EBVs on the partial EBVs is returned.'><style>
+/* put the contents panel on the left of the article, on wide screens */
+@media (min-width: 768px) {
+  .template-article > .row { flex-direction: row-reverse; }
+}
+/* show with an arrow which sections have subsections */
+#toc li > a.nav-link:has(+ ul)::after { content: " \25B8"; opacity: 0.6; }
+#toc li > a.nav-link.active:has(+ ul)::after { content: " \25BE"; opacity: 0.8; }
+</style></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -92,9 +100,11 @@ a tibble also works.</p></dd>
 
 <dt id="arg-val-group">val_group<a class="anchor" aria-label="anchor" href="#arg-val-group"></a></dt>
 <dd><p>Optional data frame with the IDs of the validation animals
-in column 1 and, optionally, a group label in column 2 (used by
-<code>plot_subgroups</code>). Every ID must be present in both <code>partial</code> and
-<code>whole</code>. Defaults to <code>NULL</code>: all animals present in both are used.</p></dd>
+in column 1 and, optionally, a group label in column 2. The statistics are
+computed on all these animals together; the label is only used by
+<code>plot_subgroups</code>, to colour the plot. Every ID must be present in both
+<code>partial</code> and <code>whole</code>. Defaults to <code>NULL</code>: all animals present in both are
+used.</p></dd>
 
 
 <dt id="arg-var-a">var_a<a class="anchor" aria-label="anchor" href="#arg-var-a"></a></dt>
