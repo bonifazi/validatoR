@@ -3,7 +3,7 @@ pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   getting-started: getting-started.html
-last_built: 2026-10-10T22:41Z
+last_built: 2026-10-11T00:36Z
 urls:
   reference: https://bonifazi.github.io/validatoR/reference
   article: https://bonifazi.github.io/validatoR/articles
