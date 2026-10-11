@@ -9,6 +9,7 @@
 Release](https://img.shields.io/github/v/release/bonifazi/validatoR?include_prereleases)](https://github.com/bonifazi/validatoR/releases)
 [![Development
 version](https://img.shields.io/github/r-package/v/bonifazi/validatoR?label=development)](https://github.com/bonifazi/validatoR/blob/main/DESCRIPTION)
+[![Documentation](https://img.shields.io/badge/docs-website-blue)](https://bonifazi.github.io/validatoR/)
 [![Licence:
 MIT](https://img.shields.io/badge/Licence-MIT-green)](https://github.com/bonifazi/validatoR/blob/main/LICENSE.md)
 [![R-CMD-check](https://github.com/bonifazi/validatoR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/bonifazi/validatoR/actions/workflows/R-CMD-check.yaml)
