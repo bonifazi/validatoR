@@ -112,15 +112,16 @@ res$stats # view the statistics
 ```
 
 The result is a list with `stats`, the table above, and `plot`. The rows of
-`stats` are:
+`stats` are. In the formulas, `p` and `w` are the partial and the whole EBVs of
+the validation animals (Bonifazi et al., 2022):
 
-| Row               | Meaning                                                                                                                                         | Expectation                                                                                                                                                                            |
-| :---------------- | :---------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `n`               | Number of validation animals: the animals found in both the partial and the whole evaluation, or the animals of `val_group` when it is provided |                                                                                                                                                                                        |
-| `level_bias`      | Mean of the partial EBVs minus mean of the whole EBVs                                                                                           | Expected to be 0 if the partial EBVs are unbiased                                                                                                                                      |
-| `dispersion_bias` | Slope of the regression of the whole EBVs on the partial EBVs                                                                                   | Expected to be 1 if the partial EBVs are unbiased. Below 1 the partial EBVs are over-dispersed relative to the whole EBVs (or the whole EBVs are under-dispersed), above 1 the reverse |
-| `rho`             | Correlation between the partial and the whole EBVs, the ratio of their accuracies                                                               | rho = 1 means no gain in accuracy when moving from the partial to the whole evaluation                                                                                                 |
-| `inc_acc`         | `1 / rho`, the increase in accuracy obtained with the whole evaluation, as a ratio to the accuracy of the partial evaluation                    |                                                                                                                                                                                        |
+| Row | Meaning | Formula | Expectation |
+| :-- | :------ | :------ | :---------- |
+| `n` | Number of validation animals: the animals found in both the partial and the whole evaluation, or the animals of `val_group` when it is provided | | |
+| `level_bias` | Mean of the partial EBVs minus mean of the whole EBVs | `mean(p) - mean(w)` | Expected to be 0 if the partial EBVs are unbiased |
+| `dispersion_bias` | Slope of the regression of the whole EBVs on the partial EBVs | `cov(p, w) / var(p)` | Expected to be 1 if the partial EBVs are unbiased. Below 1 the partial EBVs are over-dispersed relative to the whole EBVs (or the whole EBVs are under-dispersed), above 1 the reverse |
+| `rho` | Correlation between the partial and the whole EBVs, the ratio of their accuracies | `cov(p, w) / sqrt(var(p) * var(w))` | rho = 1 means no gain in accuracy when moving from the partial to the whole evaluation |
+| `inc_acc` | `1 / rho`, the increase in accuracy obtained with the whole evaluation, as a ratio to the accuracy of the partial evaluation | `1 / rho` | |
 
 In the example, the level bias is
 `r round(res$stats["level_bias", "value"], 2)`, the dispersion
@@ -149,6 +150,21 @@ between true and estimated breeding values across the validation animals), and
 additive genetic variance. The inbreeding is a data frame with the ID in
 column 1 and the coefficient in column 2, or `average_inbreeding`, the
 average inbreeding, if you only have that.
+
+The formula of `accuracy_partial` is `sqrt(cov(p, w) / ((1 - F) * var_a))`, with
+`F` the mean inbreeding of the validation animals (Bonifazi et al., 2022).
+Legarra and Reverter (2018) define this statistic with a more general
+denominator, `(1 + F - 2f) * var_a`, where `f` is the mean coancestry between the
+validation animals. If, as usual, `F` is close to `f`, it reduces to
+`(1 - F) * var_a`, the form used here, which needs only the average inbreeding.
+
+The two `var_a` are not the same. In Legarra and Reverter (2018) it is the
+genetic variance of the validation animals, at equilibrium in a population under
+selection. It can be estimated for the validation animals with methods such as
+Gibbs sampling (Macedo et al., 2020), but this is not always feasible. It is
+therefore sometimes approximated by the additive genetic variance at the
+population level, as here. This approximation is not always accurate and can give
+unexpected values of `accuracy_partial`.
 
 ```{r lr-accuracy}
 # get the inbreeding coefficients
@@ -387,6 +403,12 @@ The LR method is described in Legarra, A. and Reverter, A. (2018). Semi-parametr
 estimates of population accuracy and bias of predictions of breeding values and
 future phenotypes using the LR method. *Genetics Selection Evolution* 50:53.
 <https://doi.org/10.1186/s12711-018-0426-6>
+
+The estimation of the genetic variance of a subset of animals, used in the
+accuracy of the partial EBVs, is described in Macedo, F. L., Reverter, A. and
+Legarra, A. (2020). Behavior of the Linear Regression method to estimate bias and
+accuracies with correct and incorrect genetic evaluation models. *Journal of
+Dairy Science* 103:529-544. <https://doi.org/10.3168/jds.2019-16603>
 
 The increase in accuracy as a percentage is described in Bonifazi, R., Calus,
 M. P. L., ten Napel, J., Veerkamp, R. F., Michenet, A., Savoia, S., Cromie, A.

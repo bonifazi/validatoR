@@ -23,6 +23,7 @@
 - added a website with the guide, the help pages and the news, at https://bonifazi.github.io/validatoR/
 - added alt-text to the figures in the README and the vignette
 - clarified in the vignette what each statistic is expected to be
+- added the formulas of the LR statistics to the vignette, with the formula of the accuracy of the partial EBVs as in Bonifazi et al. (2022)
 
 ## Internal
 - added tests for error messages and `ncpus`
