@@ -112,8 +112,8 @@ res$stats # view the statistics
 ```
 
 The result is a list with `stats`, the table above, and `plot`. The rows of
-`stats` are. In the formulas, `p` and `w` are the partial and the whole EBVs of
-the validation animals (Bonifazi et al., 2022):
+`stats` are described in the table below. In the formulas, `p` and `w` are the
+partial and the whole EBVs of the validation animals (Bonifazi et al., 2022):
 
 | Row | Meaning | Formula | Expectation |
 | :-- | :------ | :------ | :---------- |
